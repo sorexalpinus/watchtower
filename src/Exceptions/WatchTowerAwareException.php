@@ -1,4 +1,5 @@
 <?php
+
 namespace WatchTower\Exceptions;
 
 /**
@@ -11,11 +12,14 @@ interface WatchTowerAwareException
      * @return string $title
      */
     public function getTitle();
+
     /**
      * @return array $extraInfo
      */
     public function getExtraInfo();
 
-    /** @return $this */
+    /**
+     * @return $this
+     */
     public function handle();
 }

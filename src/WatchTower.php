@@ -1,4 +1,5 @@
 <?php
+
 namespace WatchTower;
 
 use WatchTower\Events\ErrorEvent;
@@ -26,35 +27,72 @@ class WatchTower
     /** @var bool $initialized */
     private $initialized = false;
 
-
     /** @var array $setupPointer */
     private $setupPointer;
-    /** @var HandlerInterface[] $handlers*/
+
+    /** @var HandlerInterface[] $handlers */
     private $handlers;
 
-    private $p2;
+    /**
+     * @return WatchTower $instance
+     */
+    static public function getInstance()
+    {
+        if (!is_object(self::$instance)) {
+            self::$instance = new static();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * @return WatchTower $WatchTower
+     */
+    public function enable()
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+        $this->enabled = true;
+        return $this;
+    }
 
     /**
      * @return WatchTower
-     * @throws WatchTowerException
      */
-    public function watch() {
-        if(!empty($this->handlers)) {
-            $this->enable();
-        }
-        else {
-            throw new WatchTowerException('Empty configuration: nothing to watch for',14);
-        }
-
+    public function disable()
+    {
+        $this->enabled = false;
+        $this->initialized = false;
         return $this;
     }
+
+    /** bool $initialized */
+    public function isInitialized()
+    {
+        return $this->initialized;
+    }
+
+    static public function destroyInstance()
+    {
+        self::$instance = null;
+    }
+
+    /**
+     * @return bool $enabled
+     */
+    public function isEnabled()
+    {
+        return $this->enabled;
+    }
+
 
     /**
      * @param string|int $eventType
      * @return $this
      */
-    public function watchFor($eventType) {
-        if(!is_array($this->handlers[$eventType])) {
+    public function watchFor($eventType)
+    {
+        if (!is_array($this->handlers[$eventType])) {
             $this->handlers[$eventType] = [];
         }
         $this->setupPointer = [
@@ -68,18 +106,18 @@ class WatchTower
      * @return $this
      * @throws WatchTowerException
      */
-    public function thenCreate(HandlerInterface $handler) {
-        if(isset($this->setupPointer['eventType'])) {
+    public function thenCreate(HandlerInterface $handler)
+    {
+        if (isset($this->setupPointer['eventType'])) {
             $h = &$this->handlers[$this->setupPointer['eventType']];
-            if(!is_array($h)) {
+            if (!is_array($h)) {
                 $h = [];
             }
             $hClass = get_class($handler);
             $h[$hClass] = $handler;
             $this->setupPointer['handlerClass'] = $hClass;
-        }
-        else {
-            throw new WatchTowerException(sprintf('Wrong configuration. Please make sure you use "watchFor" method first'),12);
+        } else {
+            throw new WatchTowerException(sprintf('Wrong configuration. Please make sure you use "watchFor" method first'), 12);
         }
         return $this;
     }
@@ -89,74 +127,75 @@ class WatchTower
      * @return WatchTower
      * @throws WatchTowerException
      */
-    public function andSendTo($outputTargets) {
+    public function andSendTo($outputTargets)
+    {
         $outputTargets = is_array($outputTargets) ? $outputTargets : [$outputTargets];
-        if(isset($this->setupPointer['eventType']) and isset($this->setupPointer['handlerClass'])) {
+        if (isset($this->setupPointer['eventType']) and isset($this->setupPointer['handlerClass'])) {
             /** @var HandlerInterface $handler */
             $handler = $this->handlers[$this->setupPointer['eventType']][$this->setupPointer['handlerClass']];
-            if(is_object($handler)) {
-                foreach($outputTargets as $outputTarget) {
+            if (is_object($handler)) {
+                foreach ($outputTargets as $outputTarget) {
                     $handler->sendTo($outputTarget);
                 }
+            } else {
+                throw new WatchTowerException(sprintf('Wrong configuration. Please make sure you use "watchFor" method first'), 12);
             }
-            else {
-                throw new WatchTowerException(sprintf('Wrong configuration. Please make sure you use "watchFor" method first'),12);
-            }
-        }
-        else {
-            throw new WatchTowerException(sprintf('Wrong configuration. Please make sure you use "watchFor" method first'),12);
+        } else {
+            throw new WatchTowerException(sprintf('Wrong configuration. Please make sure you use "watchFor" method first'), 12);
         }
         return $this;
     }
 
-
-    /**
-     * @return WatchTower $WatchTower
-     */
-    public function enable()
-    {
-        if(!$this->initialized) {
-            $this->init();
-        }
-        $this->enabled = true;
-        return $this;
-    }
-
-    /** bool $initialized */
-    public function isInitialized() {
-        return $this->initialized;
-    }
 
     /**
      * @return WatchTower
+     * @throws WatchTowerException
      */
-    public function disable()
+    public function watch()
     {
-        $this->enabled = false;
-        $this->initialized = false;
+        if (!empty($this->handlers)) {
+            $this->enable();
+        } else {
+            throw new WatchTowerException('Empty configuration: nothing to watch for', 14);
+        }
+
         return $this;
     }
 
-    static public function destroyInstance() {
-        self::$instance = null;
-    }
 
     /**
-     * @return bool $enabled
+     * @param \Exception $exception
+     * @return bool $result
      */
-    public function isEnabled() {
-        return $this->enabled;
-    }
-
-    /**
-     * @return WatchTower $instance
-     */
-    static public function getInstance()
+    public function handleException(\Exception $exception)
     {
-        if (!is_object(self::$instance)) {
-            self::$instance = new static();
+        $result = false;
+        if ($this->isEnabled()) {
+            $event = new ExceptionEvent($exception);
+            $result = $this->handleEvent($event);
         }
-        return self::$instance;
+        return $result;
+    }
+
+
+    /**
+     * @param EventInterface $event
+     * @return bool $result
+     */
+    public function handleEvent(EventInterface $event)
+    {
+        /** @var HandlerInterface[] $handlers */
+        $handlers = $this->getGetHandlersFor($event);
+        if (is_array($handlers)) {
+            foreach ($handlers as $handler) {
+                $handler
+                    ->handle($event)
+                    ->sendToOutputTargets($event);
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -172,18 +211,22 @@ class WatchTower
     }
 
     /**
-     * @param \Exception $exception
-     * @return bool $result
+     * @param EventInterface $event
+     * @return HandlerInterface[] $handlers
      */
-    public function handleException(\Exception $exception) {
-        $result = false;
-        if($this->isEnabled()) {
-            $event = new ExceptionEvent($exception);
-            $result = $this->handleEvent($event);
+    protected function getGetHandlersFor(EventInterface $event)
+    {
+        $found = [];
+        if (is_array($this->handlers)) {
+            foreach ($this->handlers as $eventCategory => $handlers) {
+                if ($event->isCategoryMatch($eventCategory)) {
+                    $found = $handlers;
+                    break;
+                }
+            }
         }
-        return $result;
+        return $found;
     }
-
 
     /**
      * @return $this
@@ -211,47 +254,5 @@ class WatchTower
         });
 
         return $this;
-    }
-
-
-    /**
-     * @param EventInterface $event
-     * @return bool $result
-     */
-    public function handleEvent(EventInterface $event)
-    {
-        /** @var HandlerInterface[] $handlers */
-        $handlers = $this->getGetHandlersFor($event);
-        if(is_array($handlers)) {
-            foreach ($handlers as $handler) {
-                $handler
-                    ->handle($event)
-                    ->sendToOutputTargets($event);
-            }
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-
-
-    /**
-     * @param EventInterface $event
-     * @return HandlerInterface[] $handlers
-     */
-    protected function getGetHandlersFor(EventInterface $event)
-    {
-        $found = [];
-        if(is_array($this->handlers)) {
-            foreach ($this->handlers as $eventCategory => $handlers) {
-                if ($event->isCategoryMatch($eventCategory)) {
-                    $found = $handlers;
-                    break;
-                }
-            }
-        }
-        return $found;
     }
 }

@@ -51,8 +51,6 @@ class WhoopsWrapper
         $html = $style.$html;
         preg_match("/<button id=\"hide-error\"\s(.+?)>(.+?)<\/button>/is",$html,$matches,PREG_OFFSET_CAPTURE);
 
-
-
         $button = $matches[0][0];
         $pos = $matches[0][1];
 

@@ -9,8 +9,6 @@ use WatchTower\Events\EventInterface;
  */
 class SomethingWentWrong extends Handler
 {
-
-    protected $defaultConfig = [];
     /**
      * @param EventInterface $event
      * @return $this

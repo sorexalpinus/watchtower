@@ -14,8 +14,6 @@ use Whoops\Handler\PrettyPageHandler;
  */
 class WhoopsMinibox extends Handler
 {
-    protected $defaultConfig = [];
-
     /**
      * @param EventInterface $event
      * @return $this

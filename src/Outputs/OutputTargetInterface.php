@@ -4,6 +4,10 @@ namespace WatchTower\Outputs;
 
 use WatchTower\Events\EventInterface;
 
+/**
+ * Interface OutputTargetInterface
+ * @package WatchTower\Outputs
+ */
 interface OutputTargetInterface
 {
     /**

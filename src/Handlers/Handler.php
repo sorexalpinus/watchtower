@@ -1,4 +1,5 @@
 <?php
+
 namespace WatchTower\Handlers;
 
 use WatchTower\ConfigValidation;
@@ -6,6 +7,10 @@ use WatchTower\Events\EventInterface;
 use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Outputs\OutputTargetInterface;
 
+/**
+ * Class Handler
+ * @package WatchTower\Handlers
+ */
 abstract class Handler implements HandlerInterface
 {
     use ConfigValidation;
@@ -28,7 +33,7 @@ abstract class Handler implements HandlerInterface
     protected $outputTargets;
 
     /** @var array $defaultConfig */
-    protected $defaultConfig;
+    protected $defaultConfig = [];
 
     /**
      * @param array $config
@@ -41,6 +46,17 @@ abstract class Handler implements HandlerInterface
     }
 
     /**
+     * SaveFile constructor.
+     *
+     * @param array $config
+     * @throws WatchTowerException
+     */
+    public function __construct(array $config = [])
+    {
+        $this->config = $this->validateAndApplyConfig($this->getDefaultConfig(), $config);
+    }
+
+    /**
      * @param OutputTargetInterface $output
      * @return $this
      */
@@ -50,7 +66,8 @@ abstract class Handler implements HandlerInterface
         return $this;
     }
 
-    public function getOutputTargets() {
+    public function getOutputTargets()
+    {
         return is_array($this->outputTargets) ? $this->outputTargets : [];
     }
 
@@ -70,17 +87,6 @@ abstract class Handler implements HandlerInterface
             }
         }
         return $this;
-    }
-
-    /**
-     * SaveFile constructor.
-     *
-     * @param array $config
-     * @throws WatchTowerException
-     */
-    public function __construct(array $config = [])
-    {
-        $this->config = $this->validateAndApplyConfig($this->getDefaultConfig(), $config);
     }
 
     /**
@@ -104,6 +110,9 @@ abstract class Handler implements HandlerInterface
         return $this->output;
     }
 
+    /**
+     * @return array $outputVars
+     */
     public function getOutputVars()
     {
         return !empty($this->outputVars) ? $this->outputVars : [];
@@ -118,10 +127,6 @@ abstract class Handler implements HandlerInterface
         if (empty($item)) {
             return $this->config;
         } else {
-            echo '<pre>';
-            print_r($this->config);
-            echo '</pre>';
-            die;
             if (array_key_exists($item, $this->config)) {
                 return $this->config[$item];
             } else {

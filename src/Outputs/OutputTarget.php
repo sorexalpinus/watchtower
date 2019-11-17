@@ -5,6 +5,10 @@ use WatchTower\ConfigValidation;
 use WatchTower\Events\EventInterface;
 use WatchTower\Exceptions\WatchTowerException;
 
+/**
+ * Class OutputTarget
+ * @package WatchTower\Outputs
+ */
 abstract class OutputTarget implements OutputTargetInterface
 {
     use ConfigValidation;
@@ -47,11 +51,6 @@ abstract class OutputTarget implements OutputTargetInterface
     public function execute(EventInterface $event,$content,$globalVars = [])
     {
        throw new WatchTowerException(sprintf('Execute method not implemented for <b>%s</b> output target',get_class($this)),10);
-    }
-
-    public function getDefaultConfig($item = null)
-    {
-        return [];
     }
 
     public function getOutputVars() {

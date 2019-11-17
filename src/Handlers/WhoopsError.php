@@ -14,8 +14,6 @@ use Whoops\Handler\PrettyPageHandler;
  */
 class WhoopsError extends Handler
 {
-    protected $defaultConfig = [];
-
     /**
      * @param EventInterface $event
      * @return WhoopsError $this

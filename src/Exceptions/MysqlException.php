@@ -12,16 +12,22 @@ class MysqlException extends \ErrorException implements WatchTowerAwareException
 {
     /** @var string $title */
     protected $title = 'MySQL error';
+
     /** @var string $message */
     protected $message;
+
     /** @var int $code */
     protected $code;
+
     /** @var string $filename */
     protected $filename;
+
     /** @var int $lineno */
     protected $lineno;
+
     /** @var \Throwable|null $previous ; */
     protected $previous;
+
     /** @var array $mysqlErrorInfo */
     protected $mysqlErrorInfo;
 
@@ -60,12 +66,12 @@ class MysqlException extends \ErrorException implements WatchTowerAwareException
      * @return MysqlException|false
      * @throws WatchTowerException
      */
-    public function handle() {
-        if(is_object($this->WatchTower)) {
+    public function handle()
+    {
+        if (is_object($this->WatchTower)) {
             $this->WatchTower->handleException($this);
             return $this;
-        }
-        else {
+        } else {
             return false;
         }
     }

@@ -19,8 +19,6 @@ class WatchTowerException extends \ErrorException implements WatchTowerAwareExce
 
     }
 
-
-
     /**
      * @return string $title
      */

@@ -5,8 +5,18 @@ namespace WatchTower\Outputs;
 use WatchTower\Events\EventInterface;
 use WatchTower\Wrappers\MailTransportInterface;
 
+/**
+ * Class Email
+ * @package WatchTower\Outputs
+ */
 class Email extends OutputTarget
 {
+    /**
+     * @param EventInterface $event
+     * @param $content
+     * @param array $globalVars
+     * @return $this|void|OutputTargetInterface
+     */
     public function execute(EventInterface $event,$content,$globalVars = [])
     {
         $body = $this->buildEmailBody($content,$globalVars);

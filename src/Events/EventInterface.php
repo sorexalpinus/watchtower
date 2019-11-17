@@ -1,10 +1,8 @@
 <?php
 namespace WatchTower\Events;
 
-use WatchTower\Handlers\HandlerInterface;
-
 /**
- * Class Event : universal class that covers all non-standard events - both errors and exceptions
+ * that covers all non-standard events - both errors and exceptions
  * @package WatchTower
  */
 interface EventInterface
@@ -30,12 +28,6 @@ interface EventInterface
      * @return bool $isMatch
      */
     public function isCategoryMatch($category);
-
-    /**
-     * @param string $handlerName
-     * @return array $handlerOutput
-     */
-    public function getHandlerOutput($handlerName);
 
     public function getMessage();
 

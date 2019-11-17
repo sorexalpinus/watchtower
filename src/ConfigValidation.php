@@ -4,6 +4,10 @@ namespace WatchTower;
 
 use WatchTower\Exceptions\WatchTowerException;
 
+/**
+ * Trait ConfigValidation
+ * @package WatchTower
+ */
 trait ConfigValidation
 {
     /**
