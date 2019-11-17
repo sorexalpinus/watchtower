@@ -1,8 +1,8 @@
-# watchtower
+# WatchTower
 
-Error & Exception handler for PHP 7+
+Slim error & exception handler for PHP 7+
 
-##Installation
+## Installation
 
 Install the latest version with
 
@@ -26,11 +26,11 @@ $ composer require sorexalpinus/watchtower
 ```
 
 
-##Author
+## Author
 Juraj Hlatky (sorexalpinus)
 
-##License
+## License
 WatchTower is licensed under the MIT License - see the LICENSE file for details
 
-##Special thanks
+## Special thanks
 This library uses modified Whoops (filp/whoops) package
