@@ -1,5 +1,6 @@
 {
     "name": "sorexalpinus/watchtower",
+    "keywords": ["error", "exception", "handling", "handler"],
     "description": "Error & Exception handler for PHP 7+",
     "type": "library",
     "license": "MIT",
@@ -9,8 +10,8 @@
             "email": "jhlatky@gmail.com"
         }
     ],
-    "minimum-stability": "stable",
     "require": {
+        "php": ">=7.2.0",
         "phpmailer/phpmailer": "^6.1",
         "filp/whoops": "^2.5",
         "jdorn/sql-formatter": "^1.2"
