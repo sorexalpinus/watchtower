@@ -91,12 +91,17 @@ abstract class Handler implements HandlerInterface
 
     /**
      * @param array|string|null $item
-     * @return array
+     * @return array|string|null
      */
     public function getDefaultConfig($item = null)
     {
         if (!empty($item)) {
-            return $this->defaultConfig[$item];
+            if(isset($this->defaultConfig[$item])) {
+                return $this->defaultConfig[$item];
+            }
+            else {
+                return null;
+            }
         } else {
             return $this->defaultConfig;
         }

@@ -27,18 +27,14 @@ class EventLauncher
         throw new $class($message,$code);
     }
 
-    public function triggerError($type,$message = '') {
+    public function triggerError($type) {
         switch($type) {
             case E_WARNING: {
-                $a = 1;
-                foreach($a as $b) {
-                    echo 'c';
-                }
+                trigger_error('Triggered parse error',E_WARNING);
                 break;
             }
             case E_PARSE: {
                 trigger_error('Triggered parse error',E_PARSE);
-
                 break;
             }
             case E_NOTICE: {

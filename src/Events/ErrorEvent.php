@@ -2,7 +2,6 @@
 namespace WatchTower\Events;
 
 use Throwable;
-use Whoops\Exception\ErrorException;
 
 /**
  * Class ErrorEvent
@@ -99,7 +98,7 @@ class ErrorEvent extends Event
     public function getTraceAsString()
     {
         $trace = $this->errorInfo['trace'];
-        $out = [];
+        $out = '';
         if (is_array($trace) and sizeof($trace) > 0) {
             $trace[0]['args'] = null;
             foreach ($trace as $t) {

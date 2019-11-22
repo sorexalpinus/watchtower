@@ -19,7 +19,7 @@ class SomethingWentWrongTest extends TestCase
 
     /**
      * @return SomethingWentWrong
-     * @throws \WatchTower\Exceptions\WatchTowerException
+     * @throws WatchTowerException
      */
     public function test__construct()
     {
@@ -32,7 +32,7 @@ class SomethingWentWrongTest extends TestCase
 
     /**
      * @return HandlerInterface|SomethingWentWrong
-     * @throws \WatchTower\Exceptions\WatchTowerException
+     * @throws WatchTowerException
      */
     public function testCreate()
     {

@@ -22,7 +22,11 @@ class File extends OutputTarget
      */
     public function getDefaultConfig($item = null)
     {
-        $webRoot = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'];
+        $webRoot = '';
+        if (PHP_SAPI !== 'cli') {
+            $webRoot = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'];
+        }
+
         if (!isset($this->defaultConfig)) {
             $accessLinkFunc = function (EventInterface $event, OutputTargetInterface $outputTarget) use ($webRoot) {
                 $filename = $outputTarget->getFilename($event->getId());

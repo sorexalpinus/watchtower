@@ -53,7 +53,21 @@ abstract class OutputTarget implements OutputTargetInterface
        throw new WatchTowerException(sprintf('Execute method not implemented for <b>%s</b> output target',get_class($this)),10);
     }
 
+    /**
+     * @return array $outputVars
+     */
     public function getOutputVars() {
         return is_array($this->outputVars) ? $this->outputVars : [];
     }
+
+    /**
+     * @param string|null $item
+     * @return array $defaultConfig
+     */
+    public function getDefaultConfig($item = null)
+    {
+        return [];
+    }
+
+
 }
