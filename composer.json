@@ -1,23 +1,38 @@
 {
-    "name": "sorexalpinus/watchtower",
-    "keywords": ["error", "exception", "handling", "handler"],
-    "description": "Error & Exception handler for PHP 7+",
-    "type": "library",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "sorexalpinus",
-            "email": "jhlatky@gmail.com"
-        }
-    ],
-    "require": {
-        "php": ">=7.2.0",
-        "phpmailer/phpmailer": "^6.1",
-        "filp/whoops": "^2.5",
-        "jdorn/sql-formatter": "^1.2"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^8.4",
-        "kint-php/kint": "^3.2"
+  "name": "sorexalpinus/watchtower",
+  "keywords": [
+    "error",
+    "exception",
+    "handling",
+    "handler"
+  ],
+  "description": "Error & Exception handler for PHP 7+",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "sorexalpinus",
+      "email": "jhlatky@gmail.com"
     }
+  ],
+  "require": {
+    "php": ">=7.2.0",
+    "phpmailer/phpmailer": "^6.1",
+    "filp/whoops": "^2.5",
+    "jdorn/sql-formatter": "^1.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^8.4",
+    "kint-php/kint": "^3.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "WatchTower\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "WatchTower\\": "tests/"
+    }
+  }
 }
