@@ -23,9 +23,16 @@ class WhoopsError extends Handler
         $ww = new WhoopsWrapper();
         $whoopsHandler =new PrettyPageHandler();
         $whoopsHandler->handleUnconditionally(true);
-        $this->output = $ww->handle($whoopsHandler,$event,'error-page');
+        $this->output = $ww->handle($whoopsHandler,$event);
         $plainTextHandler = new PlainTextHandler();
-        $this->outputVars['plaintext'] = $ww->handle($plainTextHandler,$event,'error-page');
+        $this->outputVars['plaintext'] = $ww->handle($plainTextHandler,$event);
         return $this;
+    }
+
+    /**
+     *
+     */
+    public function afterSendToOutput() {
+        die;
     }
 }
