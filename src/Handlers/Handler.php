@@ -80,10 +80,12 @@ abstract class Handler implements HandlerInterface
         if (is_array($this->outputTargets)) {
             $globalVars = $this->getOutputVars();
             foreach ($this->outputTargets as $outputTarget) {
-
                 /** @var OutputTargetInterface $outputTarget */
                 $outputTarget->execute($event, $this->getOutput(), $globalVars);
                 $globalVars = array_merge($globalVars, $outputTarget->getOutputVars());
+            }
+            if(method_exists($this,'afterSendToOutput')) {
+                $this->afterSendToOutput();
             }
         }
         return $this;
