@@ -33,6 +33,8 @@ class WhoopsError extends Handler
      *
      */
     public function afterSendToOutput() {
-        die;
+        if (PHP_SAPI !== 'cli')  {
+            die;
+        }
     }
 }
