@@ -45,7 +45,7 @@ class WhoopsMinibox extends Handler
         $script = '';
         if(self::$counter == 1) {
             $style = '<style>
-            .minibox {
+            .wt-minibox {
                 position: relative;
                 color: white;
                 box-sizing: border-box;
@@ -57,7 +57,7 @@ class WhoopsMinibox extends Handler
                 font-size:10px;
                 border-bottom: 1px solid gray;
             }
-            .minibox .expand-error {
+            .wt-minibox .expand-error {
                 position:absolute;
                 bottom:5px;
                 right:5px;
@@ -70,21 +70,21 @@ class WhoopsMinibox extends Handler
                 border-radius: 3px;
                 outline: none !important;
             }
-            .minibox .expand-error:hover {
+            .wt-minibox .expand-error:hover {
                 box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
                 color: rgba(255, 255, 255, 0.3);
             }
-            .minibox .exc-message {
+            .wt-minibox .exc-message {
                 font-size:15px;
             }
-            .minibox .frame-file {
+            .wt-minibox .frame-file {
                 font-size:12px;
                 padding-top: 3px;
             }
-            .mainbox.collapsed {
+            .wt-mainbox.collapsed {
                 display: none;
             }
-            .mainbox.expanded {
+            .wt-mainbox.expanded {
                 display: block;
             }
           </style>';
@@ -94,21 +94,21 @@ class WhoopsMinibox extends Handler
                     $("button.expand-error").on("click",function() {
                         
                         if($(this).attr("action") === "expand") {
-                              var thisId = $(this).closest(".minibox-wrapper").attr("id");
-                             $(".minibox-wrapper").each(function(i,e) {
+                              var thisId = $(this).closest(".wt-minibox-wrapper").attr("id");
+                             $(".wt-minibox-wrapper").each(function(i,e) {
                                    if($(e).attr("id") !== thisId) {
                                        $(e).remove();
                                    }
                              });
                              $(this).attr("action","collapse");
                              $(this).html("COLLAPSE");
-                             $(this).closest(".minibox-wrapper").find(".mainbox").removeClass("collapsed");
+                             $(this).closest(".wt-minibox-wrapper").find(".wt-mainbox").removeClass("collapsed");
                              $("div#"+thisId+" .frame.active").trigger("click"); 
                         }
                         else {
                              $(this).attr("action","expand");
                              $(this).html("EXPAND");
-                             $(this).closest(".minibox-wrapper").find(".mainbox").removeClass("expanded").addClass("collapsed"); 
+                             $(this).closest(".wt-minibox-wrapper").find(".wt-mainbox").removeClass("expanded").addClass("collapsed"); 
                         }
                     });
                 }
@@ -123,7 +123,7 @@ class WhoopsMinibox extends Handler
                 <span>'.$event->getName().': '.$event->getMessage().'</span>
                 <div class="frame-file"><strong><span class="delimiter">'.$event->getFile().':'.$event->getLine().'</span></strong></div>
                 </div>'.$expButton;
-        $html = '<div class="minibox-wrapper" id="'.$id.'"><div class="minibox">'.$minibox.'</div><div class="mainbox collapsed">'.$html.'</div></div>';
+        $html = '<div class="wt-minibox-wrapper" id="'.$id.'"><div class="wt-minibox">'.$minibox.'</div><div class="wt-mainbox collapsed">'.$html.'</div></div>';
         $html = '<div style="float:left;width:100%;">'.$html.'</div>';
         $r = $style.$html.$jquery.$script;
         return $r;
