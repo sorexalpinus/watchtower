@@ -2,6 +2,7 @@
 
 namespace WatchTower\Tests;
 
+use mysqli;
 use PHPUnit\Framework\TestCase;
 use WatchTower\Exceptions\MysqlException;
 use WatchTower\Exceptions\WatchTowerException;
@@ -9,7 +10,7 @@ use WatchTower\Exceptions\WatchTowerException;
 class MysqlExceptionTest extends TestCase
 {
     public function getMysqli() {
-        return new \mysqli();
+        return new mysqli();
     }
 
     /**

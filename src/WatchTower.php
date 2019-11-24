@@ -93,7 +93,10 @@ class WatchTower
      */
     public function watchFor($eventType)
     {
-        if (!is_array($this->handlers[$eventType])) {
+        if(!is_array($this->handlers)) {
+            $this->handlers = [];
+        }
+        if (!array_key_exists($eventType,$this->handlers) or !is_array($this->handlers[$eventType])) {
             $this->handlers[$eventType] = [];
         }
         $this->setupPointer = [
