@@ -2,6 +2,7 @@
 
 namespace WatchTower;
 
+use Exception;
 use WatchTower\Events\ErrorEvent;
 use WatchTower\Events\EventInterface;
 use WatchTower\Events\EventTrait;
@@ -164,10 +165,10 @@ class WatchTower
 
 
     /**
-     * @param \Exception $exception
+     * @param Exception $exception
      * @return bool $result
      */
-    public function handleException(\Exception $exception)
+    public function handleException(Exception $exception)
     {
         $result = false;
         if ($this->isEnabled()) {
@@ -184,6 +185,7 @@ class WatchTower
      */
     public function handleEvent(EventInterface $event)
     {
+        //echo 'handle event...<br />';
         /** @var HandlerInterface[] $handlers */
         $handlers = $this->getGetHandlersFor($event);
         if (is_array($handlers)) {
