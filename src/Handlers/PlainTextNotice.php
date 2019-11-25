@@ -18,7 +18,6 @@ class PlainTextNotice extends Handler
     public function __construct(array $config = [])
     {
         parent::__construct($config);
-        ini_set('display_errors',1);
     }
 
     /**

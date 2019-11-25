@@ -208,7 +208,7 @@ class WatchTower
      */
     protected function init()
     {
-        ini_set('display_errors', 1);
+        ini_set('display_errors', 0);
         $this->setErrorHandler();
         $this->setExceptionHandler();
         $this->initialized = true;
