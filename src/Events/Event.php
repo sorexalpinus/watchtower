@@ -22,4 +22,17 @@ abstract class Event implements EventInterface
         return $this->id;
     }
 
+    /**
+     * @param callable $filter
+     * @return bool
+     */
+    public function passedThroughFilter($filter) {
+        if(is_callable($filter)) {
+            return $filter($this);
+        }
+        else {
+            return false;
+        }
+    }
+
 }

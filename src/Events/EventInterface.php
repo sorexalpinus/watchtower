@@ -29,16 +29,35 @@ interface EventInterface
      */
     public function isCategoryMatch($category);
 
+    /**
+     * @param callable $filter
+     * @return bool
+     */
+    public function passedThroughFilter($filter);
+
+    /**
+     * @return string
+     */
     public function getMessage();
 
+    /**
+     * @return int
+     */
     public function getCode();
-
+    /**
+     * @return string
+     */
     public function getFile();
 
+    /**
+     * @return int
+     */
     public function getLine();
 
     public function getTrace();
-
+    /**
+     * @return string
+     */
     public function getTraceAsString();
 
 

@@ -34,6 +34,9 @@ class WatchTower
     /** @var HandlerInterface[] $handlers */
     private $handlers;
 
+    /** @var callable[] $filters */
+    private $filters;
+
     /**
      * @return WatchTower $instance
      */
@@ -89,15 +92,19 @@ class WatchTower
 
     /**
      * @param string|int $eventType
+     * @param callable|null $filter
      * @return $this
      */
-    public function watchFor($eventType)
+    public function watchFor($eventType,$filter = null)
     {
         if(!is_array($this->handlers)) {
             $this->handlers = [];
         }
         if (!array_key_exists($eventType,$this->handlers) or !is_array($this->handlers[$eventType])) {
             $this->handlers[$eventType] = [];
+            if(isset($filter)) {
+                $this->filters[$eventType] = $filter;
+            }
         }
         $this->setupPointer = [
             'eventType' => $eventType
@@ -225,12 +232,24 @@ class WatchTower
         if (is_array($this->handlers)) {
             foreach ($this->handlers as $eventCategory => $handlers) {
                 if ($event->isCategoryMatch($eventCategory)) {
-                    $found = $handlers;
-                    break;
+                    $filter = $this->getFilterFor($eventCategory);
+                    if (!$filter or $event->passedThroughFilter($filter)) {
+                        $found = $handlers;
+                        break;
+                    }
                 }
+
             }
         }
         return $found;
+    }
+
+    /**
+     * @param string|int $eventCategory
+     * @return callable|false $filter
+     */
+    protected function getFilterFor($eventCategory) {
+        return is_callable($this->filters[$eventCategory]) ? $this->filters[$eventCategory] : false;
     }
 
     /**
