@@ -124,7 +124,7 @@ class WhoopsMinibox extends Handler
                 <div class="frame-file"><strong><span class="delimiter">'.$event->getFile().':'.$event->getLine().'</span></strong></div>
                 </div>'.$expButton;
         $html = '<div class="wt-minibox-wrapper" id="'.$id.'"><div class="wt-minibox">'.$minibox.'</div><div class="wt-mainbox collapsed">'.$html.'</div></div>';
-        $html = '<div style="float:left;width:100%;">'.$html.'</div>';
+        $html = '<div style="position:absolute;float:left;width:100%;">'.$html.'</div>';
         $r = $style.$html.$jquery.$script;
         return $r;
     }
