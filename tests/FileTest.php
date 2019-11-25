@@ -15,7 +15,7 @@ class FileTest extends TestCase
      */
     protected function tearDown() : void
     {
-        $dir = $this->getFileConfig()['dir'].DS;
+        $dir = $this->getFileConfig()['dir'].'/';
         if(file_exists($dir)) {
             $this->rrmdir($dir);
         }
@@ -32,7 +32,7 @@ class FileTest extends TestCase
 
     protected function getFileConfig() {
         $conFile = [
-            'dir'     => __DIR__.DS.'tests'.DS.'files'
+            'dir'     => __DIR__.'/tests/files'
         ];
         return $conFile;
     }
@@ -95,7 +95,7 @@ class FileTest extends TestCase
         $this->assertArrayHasKey('fileAccessLink',$ov);
         $this->assertTrue($ov['success']);
         $this->assertNotEmpty($ov['fileAccessLink']);
-        $filepath = $this->getFileConfig()['dir'].DS.$o->getFilename($e->getId());
+        $filepath = $this->getFileConfig()['dir'].'/'.$o->getFilename($e->getId());
         $this->assertFileExists($filepath);
         $this->assertFileIsReadable($filepath);
         $this->assertStringEqualsFile($filepath,'Output this string in File');

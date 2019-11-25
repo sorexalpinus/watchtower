@@ -122,8 +122,8 @@ class File extends OutputTarget
     protected function validateAndApplyConfig($defaultConfig, $config)
     {
         $result = $this->parentValidateAndApplyConfig($defaultConfig, $config);
-        if (substr($result['dir'], -1) != DS) {
-            $result['dir'] .= DS;
+        if (substr($result['dir'], -1) != '/') {
+            $result['dir'] .= '/';
         }
         return $result;
     }
