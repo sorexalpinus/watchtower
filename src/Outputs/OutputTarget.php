@@ -69,5 +69,13 @@ abstract class OutputTarget implements OutputTargetInterface
         return [];
     }
 
+    /**
+     * @param string $initialOutput
+     * @return $this
+     */
+    public function init($initialOutput) {
+        return $this;
+    }
+
 
 }

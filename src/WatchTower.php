@@ -198,7 +198,8 @@ class WatchTower
         //echo 'handle event...<br />';
         /** @var HandlerInterface[] $handlers */
         $handlers = $this->getGetHandlersFor($event);
-        if (is_array($handlers)) {
+
+        if (is_array($handlers) and sizeof($handlers) > 0) {
             foreach ($handlers as $handler) {
                 $handler
                     ->handle($event)
@@ -281,6 +282,7 @@ class WatchTower
     protected function setExceptionHandler()
     {
         set_exception_handler(function ($exception) {
+
             $event = new ExceptionEvent($exception);
             $this->handleEvent($event);
         });

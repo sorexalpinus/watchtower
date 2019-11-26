@@ -35,4 +35,10 @@ interface OutputTargetInterface
      */
     public function getOutputVars();
 
+    /**
+     * @param string $initialOutput
+     * @return $this
+     */
+    public function init($initialOutput);
+
 }

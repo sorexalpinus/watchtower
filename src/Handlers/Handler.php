@@ -35,6 +35,9 @@ abstract class Handler implements HandlerInterface
     /** @var array $defaultConfig */
     protected $defaultConfig = [];
 
+    /** @var array $outputStarted */
+    static protected $outputStarted;
+
     /**
      * @param array $config
      * @return HandlerInterface|static
@@ -77,10 +80,19 @@ abstract class Handler implements HandlerInterface
      */
     public function sendToOutputTargets(EventInterface $event)
     {
+        if(!isset(self::$outputStarted)) {
+            self::$outputStarted = [];
+        }
         if (is_array($this->outputTargets)) {
             $globalVars = $this->getOutputVars();
+            /** @var OutputTargetInterface $outputTarget */
             foreach ($this->outputTargets as $outputTarget) {
-                /** @var OutputTargetInterface $outputTarget */
+
+                if(method_exists($this,'getOutputStart') and !self::$outputStarted[get_class($outputTarget)]) {
+                    $outputTarget->init($this->getOutputStart());
+                    self::$outputStarted[get_class($outputTarget)] = true;
+                }
+
                 $outputTarget->execute($event, $this->getOutput(), $globalVars);
                 $globalVars = array_merge($globalVars, $outputTarget->getOutputVars());
             }

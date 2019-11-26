@@ -14,7 +14,6 @@ use Whoops\Handler\PrettyPageHandler;
  */
 class WhoopsMinibox extends Handler
 {
-    static protected $counter = 0;
 
     /**
      * @param EventInterface $event
@@ -22,7 +21,6 @@ class WhoopsMinibox extends Handler
      */
     public function handle(EventInterface $event)
     {
-        self::$counter++;
         $ww = new WhoopsWrapper();
         $whoopsHandler = new PrettyPageHandler();
         $whoopsHandler->handleUnconditionally(true);
@@ -31,20 +29,15 @@ class WhoopsMinibox extends Handler
         $this->output = $html;
         $plainTextHandler = new PlainTextHandler();
         $this->outputVars['plaintext'] = $ww->handle($plainTextHandler,$event);
+
         return $this;
     }
 
     /**
-     * @param string $html
-     * @param EventInterface $event
-     * @return string $html
+     * @return string $initialOutput
      */
-    protected function wrapIntoMinibox($html,EventInterface $event) {
-        $style = '';
-        $jquery = '';
-        $script = '';
-        if(self::$counter == 1) {
-            $style = '<style>
+    protected function getOutputStart() {
+        $style = '<style>
             .wt-minibox {
                 position: relative;
                 color: white;
@@ -88,8 +81,8 @@ class WhoopsMinibox extends Handler
                 display: block;
             }
           </style>';
-            $jquery = '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
-            $script = '<script>
+        $jquery = '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
+        $script = '<script>
                    function toggleExpand() {
                     $("button.expand-error").on("click",function() {
                         
@@ -116,7 +109,16 @@ class WhoopsMinibox extends Handler
                       toggleExpand();
                  });
         </script>';
-        }
+        return $style.$jquery.$script;
+    }
+
+    /**
+     * @param string $html
+     * @param EventInterface $event
+     * @return string $html
+     */
+    protected function wrapIntoMinibox($html,EventInterface $event) {
+
         $id = 'e_'.str_replace('.','_',$event->getId());
         $expButton = '<button action="expand" style="margin-left:5px;" class="rightButon expand-error" title="Hide error message">EXPAND</button>';
         $minibox = '<div class="exc-message">
@@ -124,7 +126,7 @@ class WhoopsMinibox extends Handler
                 <div class="frame-file"><strong><span class="delimiter">'.$event->getFile().':'.$event->getLine().'</span></strong></div>
                 </div>'.$expButton;
         $html = '<div class="wt-minibox-wrapper" id="'.$id.'"><div class="wt-minibox">'.$minibox.'</div><div class="wt-mainbox collapsed">'.$html.'</div></div>';
-        $r = $style.$html.$jquery.$script;
+        $r = $style.$jquery.$script.$html;
         return $r;
     }
 }

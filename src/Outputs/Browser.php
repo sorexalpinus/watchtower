@@ -20,4 +20,13 @@ class Browser extends OutputTarget
         echo $content;
         return $this;
     }
+
+    /**
+     * @param string $initialOutput
+     * @return $this
+     */
+    public function init($initialOutput) {
+        echo $initialOutput;
+        return $this;
+    }
 }
