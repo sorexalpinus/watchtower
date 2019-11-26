@@ -28,10 +28,10 @@ class SomethingWentWrong extends Handler
         $style = '    
                body {
                     color: #666;
-                    text-align: center;
                     font-family: arial, sans-serif;
                }    
                div.error-box {
+                    text-align: center;
                     width: 25em;
                     padding: 0 4em;
                     margin: 4em auto 0 auto;
