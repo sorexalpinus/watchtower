@@ -21,12 +21,20 @@ class WhoopsWrapper
      */
     public function handle(Handler $handler,EventInterface $event) {
 
+        $xDbgWasEnabled = false;
+        if (extension_loaded('xdebug') and xdebug_is_enabled()) {
+            $xDbgWasEnabled = true;
+            xdebug_disable();
+        }
         $whoops = new Run();
         $whoops->allowQuit(false);
         $whoops->writeToOutput(false);
         $whoops->appendHandler($handler);
         $html = $whoops->handleException($event->getException());
         $html = $this->addExtraInfo($html,$event);
+        if ($xDbgWasEnabled) {
+            xdebug_disable();
+        }
         return $html;
     }
 
