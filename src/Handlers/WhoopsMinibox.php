@@ -75,7 +75,7 @@ class WhoopsMinibox extends Handler
                 color: rgba(255, 255, 255, 0.3);
             }
             .wt-minibox .exc-message {
-                font-size:15px;
+                font-size:13px;
             }
             .wt-minibox .frame-file {
                 font-size:12px;

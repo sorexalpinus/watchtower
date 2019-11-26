@@ -47,7 +47,7 @@ class MysqlException extends \ErrorException implements WatchTowerAwareException
      */
     public function __construct(\mysqli $mysqli, $query, $message = "", $code = 0, $severity = 1, $filename = __FILE__, $lineno = __LINE__, $previous = null)
     {
-        $this->message = $message;
+        $this->message = $message . '; '.$query;
         $this->code = $code;
         $this->severity = $severity;
         $this->filename = $filename;
