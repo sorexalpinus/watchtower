@@ -213,6 +213,14 @@ class WatchTower
     /**
      * @return $this
      */
+    public function reset() {
+        $this->handlers = null;
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
     protected function init()
     {
         ini_set('display_errors', 0);
