@@ -88,7 +88,7 @@ abstract class Handler implements HandlerInterface
             /** @var OutputTargetInterface $outputTarget */
             foreach ($this->outputTargets as $outputTarget) {
 
-                if(method_exists($this,'getOutputStart') and !self::$outputStarted[get_class($outputTarget)]) {
+                if(method_exists($this,'getOutputStart') and !$this->outputStarted($outputTarget)) {
                     $outputTarget->init($this->getOutputStart());
                     self::$outputStarted[get_class($outputTarget)] = true;
                 }
@@ -101,6 +101,20 @@ abstract class Handler implements HandlerInterface
             }
         }
         return $this;
+    }
+
+    /**
+     * @param OutputTargetInterface $outputTarget
+     * @return bool $started
+     */
+    protected function outputStarted(OutputTargetInterface $outputTarget) {
+        $otClass = get_class($outputTarget);
+        if(is_array(self::$outputStarted) and array_key_exists($otClass,self::$outputStarted) and self::$outputStarted[$otClass]) {
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
     /**
