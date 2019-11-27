@@ -40,6 +40,9 @@ class WatchTower
     /** @var array $eventBuffer */
     private $eventBuffer;
 
+    /** @var int $maxBufferSize */
+    private $maxBufferSize = 10;
+
     /**
      * @return WatchTower $instance
      */
@@ -244,7 +247,9 @@ class WatchTower
      * @return $this
      */
     protected function pushToBuffer(EventInterface $event) {
-        $this->eventBuffer[$event->getId()] = $event;
+        if(count($this->eventBuffer) <= $this->maxBufferSize) {
+            $this->eventBuffer[$event->getId()] = $event;
+        }
         return $this;
     }
 
@@ -278,7 +283,6 @@ class WatchTower
                         break;
                     }
                 }
-
             }
         }
         return $found;
