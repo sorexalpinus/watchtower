@@ -24,6 +24,7 @@ class ErrorEvent extends Event
     {
         $this->id = uniqid('', true);
         $this->errorInfo = $errorInfo;
+        $this->locationHash = md5($this->getName().$this->getFile().$this->getLine());
     }
 
     /**

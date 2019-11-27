@@ -22,6 +22,7 @@ class ExceptionEvent extends Event
     {
         $this->id = uniqid('', true);
         $this->exception = $exception;
+        $this->locationHash = md5($this->getName().$this->getFile().$this->getLine());
     }
 
     /**

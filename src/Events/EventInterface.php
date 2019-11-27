@@ -1,4 +1,5 @@
 <?php
+
 namespace WatchTower\Events;
 
 /**
@@ -7,6 +8,17 @@ namespace WatchTower\Events;
  */
 interface EventInterface
 {
+
+    /**
+     * @return string $id
+     */
+    public function getId();
+
+    /**
+     * @return string $hash
+     */
+    public function getLocationHash();
+
     /**
      * @return mixed
      */
@@ -44,6 +56,7 @@ interface EventInterface
      * @return int
      */
     public function getCode();
+
     /**
      * @return string
      */
@@ -54,11 +67,27 @@ interface EventInterface
      */
     public function getLine();
 
+    /**
+     * @return mixed
+     */
     public function getTrace();
+
     /**
      * @return string
      */
     public function getTraceAsString();
+
+    /**
+     * @param bool $wasHandled
+     * @return $this
+     */
+    public function setHandled($wasHandled);
+
+    /**
+     * @return bool $wasHandled
+     */
+    public function wasHandled();
+
 
 
 

@@ -33,8 +33,12 @@ class WatchTower
 
     /** @var callable[] $filters */
     private $filters;
+
     /** @var array $setup */
     private $setup;
+
+    /** @var array $eventBuffer */
+    private $eventBuffer;
 
     /**
      * @return WatchTower $instance
@@ -195,6 +199,7 @@ class WatchTower
      */
     public function handleEvent(EventInterface $event)
     {
+        $this->pushToBuffer($event);
         /** @var HandlerInterface[] $handlers */
         $handlers = $this->getGetHandlersFor($event);
         if (is_array($handlers) and sizeof($handlers) > 0) {
@@ -203,6 +208,7 @@ class WatchTower
                     ->handle($event)
                     ->sendToOutputTargets($event);
             }
+            $event->setHandled(true);
             return true;
         } else {
             return false;
@@ -230,6 +236,15 @@ class WatchTower
             }
         }
         $this->setup[$eventType] = [];
+        return $this;
+    }
+
+    /**
+     * @param EventInterface $event
+     * @return $this
+     */
+    protected function pushToBuffer(EventInterface $event) {
+        $this->eventBuffer[$event->getId()] = $event;
         return $this;
     }
 
@@ -305,6 +320,7 @@ class WatchTower
                 $event = new ErrorEvent($lastError);
                 $this->handleEvent($event);
             }
+            s($this->eventBuffer);
         });
         return $this;
     }
