@@ -195,10 +195,8 @@ class WatchTower
      */
     public function handleEvent(EventInterface $event)
     {
-        //echo 'handle event...<br />';
         /** @var HandlerInterface[] $handlers */
         $handlers = $this->getGetHandlersFor($event);
-
         if (is_array($handlers) and sizeof($handlers) > 0) {
             foreach ($handlers as $handler) {
                 $handler
@@ -227,6 +225,7 @@ class WatchTower
         ini_set('display_errors', 0);
         $this->setErrorHandler();
         $this->setExceptionHandler();
+        $this->setShutdown();
         $this->initialized = true;
         return $this;
     }
@@ -271,10 +270,52 @@ class WatchTower
             $event = new ErrorEvent(compact('code', 'message', 'file', 'line', 'trace'));
             $this->handleEvent($event);
         });
-
         return $this;
     }
 
+    /**
+     * @return $this
+     */
+    protected function setShutdown() {
+        register_shutdown_function(function () {
+            $lastError = error_get_last();
+            if(!empty($lastError)) {
+                $trace = debug_backtrace(false);
+                $lastError['trace'] = $trace;
+                $lastError['code'] = $lastError['type'];
+                unset($lastError['type']);
+                $lastError = $this->exceptionForbiddenConvert($lastError);
+                $event = new ErrorEvent($lastError);
+                $this->handleEvent($event);
+            }
+        });
+        return $this;
+    }
+
+    /**
+     * TODO:separate this into a utility class/trait
+     * @param array $errorInfo
+     * @return array $errorInfoModified
+     */
+    protected function exceptionForbiddenConvert($errorInfo) {
+        if(strpos($errorInfo['message'],'must not throw an exception') !== false) {
+            $msg = $errorInfo['message'];
+            $matches = [];
+            preg_match('/in (.*?) on line \d+/',$msg,$matches);
+            if(is_array($matches) and sizeof($matches) > 0) {
+                $m = reset($matches);
+                $m = trim(str_replace(['on line ','in '],['',''],$m));
+                $fl = explode(' ',$m);
+                $errorInfo['file'] = $fl[0];
+                $errorInfo['line'] = $fl[1];
+            }
+            return is_array($errorInfo) ? $errorInfo : [];
+        }
+        else {
+            return $errorInfo;
+
+        }
+    }
 
     /**
      * @return $this
@@ -282,7 +323,6 @@ class WatchTower
     protected function setExceptionHandler()
     {
         set_exception_handler(function ($exception) {
-
             $event = new ExceptionEvent($exception);
             $this->handleEvent($event);
         });
