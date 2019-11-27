@@ -320,7 +320,6 @@ class WatchTower
                 $event = new ErrorEvent($lastError);
                 $this->handleEvent($event);
             }
-            s($this->eventBuffer);
         });
         return $this;
     }
