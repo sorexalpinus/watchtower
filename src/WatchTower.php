@@ -28,14 +28,13 @@ class WatchTower
     /** @var bool $initialized */
     private $initialized = false;
 
-    /** @var array $setupPointer */
-    private $setupPointer;
-
     /** @var HandlerInterface[] $handlers */
     private $handlers;
 
     /** @var callable[] $filters */
     private $filters;
+    /** @var array $setup */
+    private $setup;
 
     /**
      * @return WatchTower $instance
@@ -97,7 +96,7 @@ class WatchTower
      */
     public function watchFor($eventType,$filter = null)
     {
-        $this->setupPointer = ['eventTypes' => []];
+        $this->setup = [];
         $eventTypes = is_array($eventType) ? $eventType : [$eventType];
         if(!is_array($this->handlers)) {
             $this->handlers = [];
@@ -108,17 +107,6 @@ class WatchTower
         return $this;
     }
 
-    protected function setEventType($eventType,$filter = null) {
-        if (!array_key_exists($eventType,$this->handlers) or !is_array($this->handlers[$eventType])) {
-            $this->handlers[$eventType] = [];
-            if(isset($filter)) {
-                $this->filters[$eventType] = $filter;
-            }
-        }
-        $this->setupPointer['eventTypes'][] = $eventType;
-        return $this;
-    }
-
     /**
      * @param $handler
      * @return $this
@@ -126,8 +114,8 @@ class WatchTower
      */
     public function thenCreate(HandlerInterface $handler)
     {
-        if (isset($this->setupPointer['eventTypes']) and is_array($this->setupPointer['eventTypes'])) {
-            foreach($this->setupPointer['eventTypes'] as $eventType) {
+        if (is_array($this->setup)) {
+            foreach($this->setup as $eventType => $emptyArray) {
                 $hClone = clone $handler;
                 $h = &$this->handlers[$eventType];
                 if (!is_array($h)) {
@@ -135,7 +123,7 @@ class WatchTower
                 }
                 $hClass = get_class($hClone);
                 $h[$hClass] = $hClone;
-                $this->setupPointer['handlerClasses'][$eventType] = $hClass;
+                $this->setup[$eventType] = $hClass;
             }
         } else {
             throw new WatchTowerException(sprintf('Wrong configuration. Please make sure you use "watchFor" method first'), 12);
@@ -151,8 +139,8 @@ class WatchTower
     public function andSendTo($outputTargets)
     {
         $outputTargets = is_array($outputTargets) ? $outputTargets : [$outputTargets];
-        if (is_array($this->setupPointer['handlerClasses'])) {
-            foreach($this->setupPointer['handlerClasses'] as $eventType => $handlerClass) {
+        if (is_array($this->setup)) {
+            foreach($this->setup as $eventType => $handlerClass) {
                 /** @var HandlerInterface $handler */
                 $handler = $this->handlers[$eventType][$handlerClass];
                 if (is_object($handler)) {
@@ -228,6 +216,23 @@ class WatchTower
         $this->handlers = null;
         return $this;
     }
+
+    /**
+     * @param string|int $eventType
+     * @param callable|null $filter
+     * @return $this
+     */
+    protected function setEventType($eventType,$filter = null) {
+        if (!array_key_exists($eventType,$this->handlers) or !is_array($this->handlers[$eventType])) {
+            $this->handlers[$eventType] = [];
+            if(isset($filter)) {
+                $this->filters[$eventType] = $filter;
+            }
+        }
+        $this->setup[$eventType] = [];
+        return $this;
+    }
+
 
     /**
      * @return $this
