@@ -37,7 +37,7 @@ class WatchTower
     /** @var array $setup */
     private $setup;
 
-    /** @var array $eventBuffer */
+    /** @var EventBuffer $eventBuffer */
     private $eventBuffer;
 
     /** @var int $maxBufferSize */
@@ -202,7 +202,6 @@ class WatchTower
      */
     public function handleEvent(EventInterface $event)
     {
-        $this->pushToBuffer($event);
         /** @var HandlerInterface[] $handlers */
         $handlers = $this->getGetHandlersFor($event);
         if (is_array($handlers) and sizeof($handlers) > 0) {
@@ -242,16 +241,7 @@ class WatchTower
         return $this;
     }
 
-    /**
-     * @param EventInterface $event
-     * @return $this
-     */
-    protected function pushToBuffer(EventInterface $event) {
-        if(count($this->eventBuffer) <= $this->maxBufferSize) {
-            $this->eventBuffer[$event->getId()] = $event;
-        }
-        return $this;
-    }
+
 
 
     /**
@@ -262,7 +252,8 @@ class WatchTower
         ini_set('display_errors', 0);
         $this->setErrorHandler();
         $this->setExceptionHandler();
-        $this->setShutdown();
+        //$this->setShutdown();
+        $this->eventBuffer = EventBuffer::create();
         $this->initialized = true;
         return $this;
     }
@@ -301,12 +292,46 @@ class WatchTower
      */
     protected function setErrorHandler()
     {
+        $scope = $this->getOverallErrScope();
         set_error_handler(function ($code, $message, $file, $line) {
-            $trace = debug_backtrace(false);
-            $event = new ErrorEvent(compact('code', 'message', 'file', 'line', 'trace'));
-            $this->handleEvent($event);
-        });
+            $errorInfo = compact('code', 'message', 'file', 'line');
+            if($this->eventBuffer->canPush('error',$errorInfo)) {
+                $errorInfo['trace'] = debug_backtrace(false);
+                $event = new ErrorEvent($errorInfo);
+                $this->eventBuffer->push($event);
+                $this->handleEvent($event);
+            }
+        },$scope);
         return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    protected function setExceptionHandler()
+    {
+        set_exception_handler(function ($exception) {
+            if($this->eventBuffer->canPush('exception',$exception)) {
+                $event = new ExceptionEvent($exception);
+                $this->eventBuffer->push($event);
+                $this->handleEvent($event);
+            }
+        });
+
+        return $this;
+    }
+
+    /**
+     * @return int $scope
+     */
+    protected function getOverallErrScope() {
+        $scope = 0;
+        foreach(array_keys($this->handlers) as $eventType) {
+            if(is_numeric($eventType)) {
+                $scope |= $eventType;
+            }
+        }
+        return $scope;
     }
 
     /**
@@ -353,16 +378,5 @@ class WatchTower
         }
     }
 
-    /**
-     * @return $this
-     */
-    protected function setExceptionHandler()
-    {
-        set_exception_handler(function ($exception) {
-            $event = new ExceptionEvent($exception);
-            $this->handleEvent($event);
-        });
 
-        return $this;
-    }
 }
