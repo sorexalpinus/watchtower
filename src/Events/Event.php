@@ -8,11 +8,11 @@ namespace WatchTower\Events;
  */
 abstract class Event implements EventInterface
 {
+    use EventTrait;
+
     /** @var string $id */
     protected $id;
 
-    /** @var string $locationHash */
-    protected $locationHash;
 
     /** @var bool $handled */
     protected $handled = false;
@@ -23,13 +23,6 @@ abstract class Event implements EventInterface
     public function getId()
     {
         return $this->id;
-    }
-
-    /**
-     * @return string $hash
-     */
-    public function getLocationHash() {
-        return $this->locationHash;
     }
 
     /**

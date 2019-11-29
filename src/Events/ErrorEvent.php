@@ -9,8 +9,6 @@ use Throwable;
  */
 class ErrorEvent extends Event
 {
-    use EventTrait;
-
     /** @var array $errorinfo : code, message, file, line */
     protected $errorInfo;
 
@@ -24,7 +22,6 @@ class ErrorEvent extends Event
     {
         $this->id = uniqid('', true);
         $this->errorInfo = $errorInfo;
-        $this->locationHash = md5($this->getName().$this->getFile().$this->getLine());
     }
 
     /**
@@ -122,5 +119,13 @@ class ErrorEvent extends Event
         }
         return '';
     }
+
+    /**
+     * @return string $hash
+     */
+    public function getLocationHash() {
+        return $this->getCommonLocationHash('error',$this->errorInfo);
+    }
+
 
 }

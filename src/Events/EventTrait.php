@@ -1,6 +1,8 @@
 <?php
 namespace WatchTower\Events;
 
+use Throwable;
+
 /**
  * Trait EventTrait
  * @package WatchTower\Events
@@ -48,5 +50,26 @@ trait EventTrait
         }
 
         return "";
+    }
+
+    /**
+     * @param string $type
+     * @param array|Throwable $info
+     * @return string $hash
+     */
+    public function getCommonLocationHash($type,$info) {
+
+        if($type == 'error') {
+            $name = $this->getFriendlyErrorType($info['code']);
+            $file = $info['file'];
+            $line = $info['line'];
+        }
+        else {
+            /** @var Throwable $info */
+            $name = get_class($info);
+            $file = $info->getFile();
+            $line = $info->getLine();
+        }
+        return md5($type.'.'.$name.'.'.$file.'.'.$line);
     }
 }

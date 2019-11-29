@@ -22,7 +22,6 @@ class ExceptionEvent extends Event
     {
         $this->id = uniqid('', true);
         $this->exception = $exception;
-        $this->locationHash = md5($this->getName().$this->getFile().$this->getLine());
     }
 
     /**
@@ -88,7 +87,7 @@ class ExceptionEvent extends Event
     }
 
     /**
-     * @return string $trace
+     * @return array $trace
      */
     public function getTrace()
     {
@@ -101,5 +100,12 @@ class ExceptionEvent extends Event
     public function getTraceAsString()
     {
         return $this->exception->getTraceAsString();
+    }
+
+    /**
+     * @return string $hash
+     */
+    public function getLocationHash() {
+        return $this->getCommonLocationHash('exception',$this->getException());
     }
 }
