@@ -252,7 +252,7 @@ class WatchTower
         ini_set('display_errors', 0);
         $this->setErrorHandler();
         $this->setExceptionHandler();
-        //$this->setShutdown();
+        $this->setShutdown();
         $this->eventBuffer = EventBuffer::create();
         $this->initialized = true;
         return $this;
