@@ -26,6 +26,7 @@
     "kint-php/kint": "^3.2"
   },
   "autoload": {
+    "files": ["init.php"],
     "psr-4": {
       "WatchTower\\": "src/"
     }
