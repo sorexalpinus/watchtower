@@ -111,7 +111,7 @@ class EventBuffer implements Countable
                 $cut = $fSize - $this->maxTimelogSize;
                 $file = array_slice($file,$cut-1,$fSize-1);
             }
-            file_put_contents($this->getFullTimeLogPath(),$file);
+            file_put_contents($this->getFullTimeLogPath(),implode(PHP_EOL,$file));
         }
         return $this;
     }
