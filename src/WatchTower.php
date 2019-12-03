@@ -22,6 +22,8 @@ class WatchTower
     /** @var WatchTower $instance */
     static private $instance;
 
+    static private $logfile = '/log/log';
+
     /** @var bool $enabled */
     private $enabled = false;
 
@@ -39,6 +41,7 @@ class WatchTower
 
     /** @var EventBuffer $eventBuffer */
     private $eventBuffer;
+
 
 
     /**
@@ -80,9 +83,22 @@ class WatchTower
         return $this->initialized;
     }
 
+    /**
+     *
+     */
     static public function destroyInstance()
     {
         self::$instance = null;
+    }
+
+    /**
+     * For internal logging.
+     */
+    static public function log($msg) {
+
+        $f = @fopen(WATCHTOWER_FROOT.self::$logfile,'a+');
+        @fwrite($f,date('Y-m-d H:i:s').' '.$msg.PHP_EOL);
+        @fclose($f);
     }
 
     /**
@@ -309,13 +325,18 @@ class WatchTower
     {
         $scope = $this->getOverallErrScope();
         set_error_handler(function ($code, $message, $file, $line) {
-            $errorInfo = compact('code', 'message', 'file', 'line');
-            if ($this->getEventBuffer()->canPush('error', $errorInfo)) {
-                $errorInfo['trace'] = debug_backtrace(false);
-                $event = new ErrorEvent($errorInfo);
-                $this->getEventBuffer()->push($event);
-                $this->handleEvent($event);
+            try {
+                $errorInfo = compact('code', 'message', 'file', 'line');
+                if ($this->getEventBuffer()->canPush('error', $errorInfo)) {
+                    $errorInfo['trace'] = debug_backtrace(false);
+                    $event = new ErrorEvent($errorInfo);
+                    $this->getEventBuffer()->push($event);
+                    $this->handleEvent($event);
+                }
+            } catch (\Throwable $e) {
+                self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' .$e->getLine());
             }
+
         },$scope);
         return $this;
     }
@@ -326,10 +347,14 @@ class WatchTower
     protected function setExceptionHandler()
     {
         set_exception_handler(function ($exception) {
-            if($this->getEventBuffer()->canPush('exception',$exception)) {
-                $event = new ExceptionEvent($exception);
-                $this->getEventBuffer()->push($event);
-                $this->handleEvent($event);
+            try {
+                if ($this->getEventBuffer()->canPush('exception', $exception)) {
+                    $event = new ExceptionEvent($exception);
+                    $this->getEventBuffer()->push($event);
+                    $this->handleEvent($event);
+                }
+            } catch (\Throwable $e) {
+                self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine());
             }
         });
 
