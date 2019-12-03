@@ -29,7 +29,7 @@ class EventBufferTest extends TestCase
         $reflection = new ReflectionClass($eb);
         $buffer = $reflection->getProperty('buffer');
         $buffer->setAccessible(true);
-        $maxSize = $reflection->getProperty('maxSize');
+        $maxSize = $reflection->getProperty('maxBufferSize');
         $maxSize->setAccessible(true);
         $maxSize->setValue($eb,2);
         $errorInfo = [

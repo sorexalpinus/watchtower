@@ -40,8 +40,6 @@ class WatchTower
     /** @var EventBuffer $eventBuffer */
     private $eventBuffer;
 
-    /** @var int $maxBufferSize */
-    private $maxBufferSize = 10;
 
     /**
      * @return WatchTower $instance
@@ -111,6 +109,15 @@ class WatchTower
         foreach($eventTypes as $eventType) {
             $this->setEventType($eventType,$filter);
         }
+        return $this;
+    }
+
+    /**
+     * @param string $time
+     * @return $this
+     */
+    public function reportOnceIn($time) {
+        $this->getEventBuffer()->setReportSpan($time);
         return $this;
     }
 
@@ -242,8 +249,6 @@ class WatchTower
     }
 
 
-
-
     /**
      * @return $this
      */
@@ -253,9 +258,19 @@ class WatchTower
         $this->setErrorHandler();
         $this->setExceptionHandler();
         $this->setShutdown();
-        $this->eventBuffer = EventBuffer::create();
         $this->initialized = true;
         return $this;
+    }
+
+    /**
+     * @return EventBuffer $eventBuffer
+     */
+    protected function getEventBuffer() {
+        if(!isset($this->eventBuffer)) {
+            $this->eventBuffer = EventBuffer::create();
+        }
+        return $this->eventBuffer;
+
     }
 
     /**
@@ -295,10 +310,10 @@ class WatchTower
         $scope = $this->getOverallErrScope();
         set_error_handler(function ($code, $message, $file, $line) {
             $errorInfo = compact('code', 'message', 'file', 'line');
-            if($this->eventBuffer->canPush('error',$errorInfo)) {
+            if ($this->getEventBuffer()->canPush('error', $errorInfo)) {
                 $errorInfo['trace'] = debug_backtrace(false);
                 $event = new ErrorEvent($errorInfo);
-                $this->eventBuffer->push($event);
+                $this->getEventBuffer()->push($event);
                 $this->handleEvent($event);
             }
         },$scope);
@@ -311,9 +326,9 @@ class WatchTower
     protected function setExceptionHandler()
     {
         set_exception_handler(function ($exception) {
-            if($this->eventBuffer->canPush('exception',$exception)) {
+            if($this->getEventBuffer()->canPush('exception',$exception)) {
                 $event = new ExceptionEvent($exception);
-                $this->eventBuffer->push($event);
+                $this->getEventBuffer()->push($event);
                 $this->handleEvent($event);
             }
         });
@@ -339,6 +354,7 @@ class WatchTower
      */
     protected function setShutdown() {
         register_shutdown_function(function () {
+            $this->getEventBuffer()->persist();
             $lastError = error_get_last();
             if(!empty($lastError)) {
                 $trace = debug_backtrace(false);
