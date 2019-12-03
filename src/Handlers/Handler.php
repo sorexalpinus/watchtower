@@ -94,7 +94,9 @@ abstract class Handler implements HandlerInterface
                 }
 
                 $outputTarget->execute($event, $this->getOutput(), $globalVars);
-                $globalVars = array_merge($globalVars, $outputTarget->getOutputVars());
+                if(is_array($outputTarget->getOutputVars())) {
+                    $globalVars = array_merge($globalVars, $outputTarget->getOutputVars());
+                }
             }
             if(method_exists($this,'afterSendToOutput')) {
                 $this->afterSendToOutput();
