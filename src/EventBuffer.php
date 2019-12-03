@@ -88,11 +88,17 @@ class EventBuffer implements Countable
     /**
      * @param EventInterface $event
      * @return EventBuffer $eventBuffer
+     * @throws WatchTowerException
      */
     public function push(EventInterface $event) {
         $hash = $event->getLocationHash();
-        $this->buffer[$hash] = $event;
-        $this->timelog[$hash] = date('U');
+        if(!empty($hash)) {
+            $this->buffer[$hash] = $event;
+            $this->timelog[$hash] = date('U');
+        }
+        else {
+            throw new WatchTowerException('Empty event hash for' . $event->getName(),22);
+        }
         return $this;
     }
 
@@ -102,9 +108,18 @@ class EventBuffer implements Countable
      */
     public function persist() {
         $file = $this->getLoggedData();
+        if(is_array($file)) {
+            foreach($file as $hash => $ts) {
+                if(empty($hash) or empty($ts)) {
+                    unset($file[$hash]);
+                }
+            }
+        }
         if(is_array($this->timelog)) {
             foreach($this->timelog as $hash => $ts) {
-                $file[$hash] = $hash." ".$ts;
+                if(!empty($hash) and !empty($ts)) {
+                    $file[$hash] = $hash." ".$ts;
+                }
             }
             $fSize = count($file);
             if($fSize > $this->maxTimelogSize) {
@@ -140,7 +155,9 @@ class EventBuffer implements Countable
             if(is_array($data)) {
                 foreach($data as $d) {
                     $d = explode(' ',$d);
-                    $hData[$d[0]] = $d[1];
+                    if(isset($d[0]) and isset($d[1])) {
+                        $hData[$d[0]] = trim($d[1]);
+                    }
                 }
             }
             fclose($this->timelogFile);
