@@ -60,16 +60,18 @@ trait EventTrait
     public function getCommonLocationHash($type,$info) {
 
         if($type == 'error') {
-            $name = $this->getFriendlyErrorType($info['code']);
+            $trace = '';
+            $code = $info['code'];
             $file = $info['file'];
             $line = $info['line'];
         }
         else {
             /** @var Throwable $info */
-            $name = get_class($info);
+            $trace = $info->getTraceAsString();
+            $code = $info->getCode();
             $file = $info->getFile();
             $line = $info->getLine();
         }
-        return md5($type.'.'.$name.'.'.$file.'.'.$line);
+        return md5($type.'.'.$trace.'.'.$code.'.'.$file.'.'.$line);
     }
 }
