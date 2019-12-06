@@ -207,13 +207,17 @@ class WatchTower
     /**
      * @param Exception $exception
      * @return bool $result
+     * @throws WatchTowerException
      */
     public function handleException(Exception $exception)
     {
         $result = false;
         if ($this->isEnabled()) {
-            $event = new ExceptionEvent($exception);
-            $result = $this->handleEvent($event);
+            if ($this->getEventBuffer()->canPush('exception', $exception)) {
+                $event = new ExceptionEvent($exception);
+                $result = $this->handleEvent($event);
+                $this->getEventBuffer()->push($event);
+            }
         }
         return $result;
     }
