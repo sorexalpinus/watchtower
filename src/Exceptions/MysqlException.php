@@ -2,13 +2,15 @@
 
 namespace WatchTower\Exceptions;
 
+use ErrorException;
+use mysqli;
 use WatchTower\WatchTower;
 
 /**
  * Class MysqlException
  * @package WatchTower\Exceptions
  */
-class MysqlException extends \ErrorException implements WatchTowerAwareException
+class MysqlException extends ErrorException implements WatchTowerAwareException
 {
     /** @var string $title */
     protected $title = 'MySQL error';
@@ -36,7 +38,7 @@ class MysqlException extends \ErrorException implements WatchTowerAwareException
 
     /**
      * MysqlException constructor.
-     * @param \mysqli $mysqli
+     * @param mysqli $mysqli
      * @param string $query
      * @param string $message
      * @param int $code
@@ -45,11 +47,10 @@ class MysqlException extends \ErrorException implements WatchTowerAwareException
      * @param int $lineno
      * @param null $previous
      */
-    public function __construct(\mysqli $mysqli, $query, $message = "", $code = 0, $severity = 1, $filename = __FILE__, $lineno = __LINE__, $previous = null)
+    public function __construct(mysqli $mysqli, $query, $message = "", $code = 0, $severity = 1, $filename = __FILE__, $lineno = __LINE__, $previous = null)
     {
-        $query = strlen($query) > 600 ? substr($query,0,600)." ..." : $query;
-        $this->message = $message . '; '.$query;
-        $this->code = $code;
+        $this->message = $message . ': ['.$mysqli->errno.'] '.$mysqli->error;
+        $this->code = $this->createCode($mysqli,$code);
         $this->severity = $severity;
         $this->filename = $filename;
         $this->lineno = $lineno;
@@ -101,5 +102,18 @@ class MysqlException extends \ErrorException implements WatchTowerAwareException
     {
         \SqlFormatter::$pre_attributes = 'style="color: black; background-color: transparent;';
         return \SqlFormatter::format($query);
+    }
+
+    /**
+     * @param mysqli $mysqli
+     * @param int $code
+     * @return int $code
+     */
+    protected function createCode(mysqli $mysqli, $code) {
+        if(empty($code)) {
+            //$code =  (int)'1'.sprintf("%05d", $mysqli->errno);
+            $code =  $mysqli->errno + 100000;
+        }
+        return $code;
     }
 }
