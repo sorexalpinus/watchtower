@@ -284,9 +284,10 @@ class WatchTower
 
     /**
      * @return EventBuffer $eventBuffer
+     * @throws WatchTowerException
      */
     protected function getEventBuffer() {
-        if(!isset($this->eventBuffer)) {
+        if(!isset($this->eventBuffer)) {;
             $this->eventBuffer = EventBuffer::create();
         }
         return $this->eventBuffer;

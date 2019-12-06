@@ -25,7 +25,7 @@ class EventBuffer implements Countable
     /** @var array $buffer */
     protected $buffer;
 
-    /** @var array $history */
+    /** @var array $timelog */
     protected $timelog;
 
     /** @var int $maxHistorySize */
@@ -38,7 +38,8 @@ class EventBuffer implements Countable
     private $reportSpan;
 
     /**
-     * @return EventBuffer $eventBuffer
+     * @return EventBuffer $eventsBuffer
+     * @throws WatchTowerException
      */
     static public function create()
     {
@@ -47,6 +48,8 @@ class EventBuffer implements Countable
 
     /**
      * EventBuffer constructor.
+     *
+     * @throws WatchTowerException
      */
     public function __construct()
     {
@@ -58,18 +61,24 @@ class EventBuffer implements Countable
      * @param string $type
      * @param array|string $info
      * @return bool $canPush
+     * @throws WatchTowerException
      */
     public function canPush($type,$info)
     {
         if($this->count() < $this->maxBufferSize) {
             $hash = $this->getCommonLocationHash($type,$info);
             if(!array_key_exists($hash,$this->buffer)) {
-                $ts = $this->timelog[$hash] ?? 0;
-                if((time() - $this->reportSpan) > $ts) {
-                    return true;
+                if(isset($this->reportSpan)) {
+                    $ts = $this->timelog[$hash] ?? 0;
+                    if((time() - $ts) > $this->reportSpan) {
+                        return true;
+                    }
+                    else {
+                        return false;
+                    }
                 }
                 else {
-                    return false;
+                    return true;
                 }
             }
         }
@@ -94,7 +103,9 @@ class EventBuffer implements Countable
         $hash = $event->getLocationHash();
         if(!empty($hash)) {
             $this->buffer[$hash] = $event;
-            $this->timelog[$hash] = date('U');
+            if(isset($this->reportSpan)) {
+                $this->timelog[$hash] = date('U');
+            }
         }
         else {
             throw new WatchTowerException('Empty event hash for' . $event->getName(),22);
@@ -107,26 +118,28 @@ class EventBuffer implements Countable
      * @throws WatchTowerException
      */
     public function persist() {
-        $file = $this->getLoggedData();
-        if(is_array($file)) {
-            foreach($file as $hash => $ts) {
-                if(empty($hash) or empty($ts)) {
-                    unset($file[$hash]);
+        if(isset($this->reportSpan)) {
+            $file = $this->getLoggedData();
+            if(is_array($file)) {
+                foreach($file as $hash => $ts) {
+                    if(empty($hash) or empty($ts)) {
+                        unset($file[$hash]);
+                    }
                 }
             }
-        }
-        if(is_array($this->timelog)) {
-            foreach($this->timelog as $hash => $ts) {
-                if(!empty($hash) and !empty($ts)) {
-                    $file[$hash] = $hash." ".$ts;
+            if(is_array($this->timelog)) {
+                foreach($this->timelog as $hash => $ts) {
+                    if(!empty($hash) and !empty($ts)) {
+                        $file[$hash] = $hash." ".$ts;
+                    }
                 }
+                $fSize = count($file);
+                if($fSize > $this->maxTimelogSize) {
+                    $cut = $fSize - $this->maxTimelogSize;
+                    $file = array_slice($file,$cut-1,$fSize-1);
+                }
+                file_put_contents($this->getFullTimeLogPath(),implode(PHP_EOL,$file));
             }
-            $fSize = count($file);
-            if($fSize > $this->maxTimelogSize) {
-                $cut = $fSize - $this->maxTimelogSize;
-                $file = array_slice($file,$cut-1,$fSize-1);
-            }
-            file_put_contents($this->getFullTimeLogPath(),implode(PHP_EOL,$file));
         }
         return $this;
     }
