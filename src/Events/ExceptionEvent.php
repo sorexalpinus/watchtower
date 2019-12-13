@@ -1,6 +1,8 @@
 <?php
 namespace WatchTower\Events;
 
+use ReflectionClass;
+use ReflectionException;
 use Throwable;
 
 /**
@@ -17,10 +19,13 @@ class ExceptionEvent extends Event
      * ExceptionEvent constructor.
      *
      * @param Throwable $exception
+     * @throws ReflectionException
      */
     public function __construct(Throwable $exception)
     {
         $this->id = uniqid('', true);
+//        $this->flattenExceptionBacktrace($exception);
+        $this->filterTrace($exception);
         $this->exception = $exception;
     }
 
@@ -107,5 +112,24 @@ class ExceptionEvent extends Event
      */
     public function getLocationHash() {
         return $this->getCommonLocationHash('exception',$this->getException());
+    }
+
+    /**
+     * @param Throwable $exception
+     * @return $this
+     * @throws ReflectionException
+     */
+    protected function filterTrace(Throwable $exception) {
+        if(is_array($exception->getTrace())) {
+            $traceProperty = (new ReflectionClass('Exception'))->getProperty('trace');
+            $traceProperty->setAccessible(true);
+            $trace = array_map(function($val) {
+                $val['args'] = [];
+                return $val;
+            },$exception->getTrace());
+            $traceProperty->setValue($exception, $trace);
+            $traceProperty->setAccessible(false);
+        }
+        return $this;
     }
 }

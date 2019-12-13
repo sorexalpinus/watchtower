@@ -1,7 +1,9 @@
 <?php
 
 namespace Tests;
+use ErrorException;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 use WatchTower\Events\ExceptionEvent;
 use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Handlers\HandlerInterface;
@@ -86,13 +88,14 @@ class WhoopsMiniboxTest extends TestCase
      * @depends testSendTo
      * @param WhoopsMinibox $h
      * @return WhoopsMinibox
+     * @throws ReflectionException
      */
     public function testHandle(WhoopsMinibox $h)
     {
         $regex = '/Testing message/';
-        $regex2 = '/Environment &amp; details:/';
+        $regex2 = '/wt-minibox-wrapper/';
         $regex3 = '/<button action="expand"/';
-        $exception = new \ErrorException('Testing message',1,1);
+        $exception = new ErrorException('Testing message',1,1);
         $e = new ExceptionEvent($exception);
         $h->handle($e);
         $o = $h->getOutput();
@@ -108,13 +111,14 @@ class WhoopsMiniboxTest extends TestCase
      * @depends testHandle
      * @param WhoopsMinibox $h
      * @return WhoopsMinibox
+     * @throws ReflectionException
      */
     public function testSendToOutputTargets(WhoopsMinibox $h)
     {
         $regex = '/Testing message/';
         $regex2 = '/Environment &amp; details:/';
         $regex3 = '/<button action="expand"/';
-        $exception = new \ErrorException('Testing message',1,1);
+        $exception = new ErrorException('Testing message',1,1);
         $e = new ExceptionEvent($exception);
         $this->expectOutputRegex($regex);
         $this->expectOutputRegex($regex2);

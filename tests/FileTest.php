@@ -2,7 +2,9 @@
 
 namespace WatchTower\Tests;
 
+use ErrorException;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 use WatchTower\Events\ExceptionEvent;
 use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Outputs\File;
@@ -32,7 +34,7 @@ class FileTest extends TestCase
 
     protected function getFileConfig() {
         $conFile = [
-            'dir'     => __DIR__.'/tests/files'
+            'dir'     => WATCHTOWER_TROOT.'/files/exceptions'
         ];
         return $conFile;
     }
@@ -57,9 +59,10 @@ class FileTest extends TestCase
     /**
      * @depends testCreate
      * @param File $o
+     * @throws ReflectionException
      */
     public function testGetFilename(File $o) {
-        $exception = new \ErrorException('Testing message',1,1);
+        $exception = new ErrorException('Testing message',1,1);
         $e = new ExceptionEvent($exception);
         $fn = $o->getFilename($e->getId());
         $this->assertIsString($fn);
@@ -82,11 +85,12 @@ class FileTest extends TestCase
      * @depends testCreate
      * @param File $o
      * @return File
+     * @throws ReflectionException
      * @throws WatchTowerException
      */
     public function testExecute(File $o)
     {
-        $exception = new \ErrorException('Testing message',1,1);
+        $exception = new ErrorException('Testing message',1,1);
         $e = new ExceptionEvent($exception);
         $o->execute($e,'Output this string in File',['plaintext'=>'Output plaintext']);
         $ov = $o->getOutputVars();

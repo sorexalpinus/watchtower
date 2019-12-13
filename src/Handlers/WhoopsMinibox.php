@@ -10,10 +10,15 @@ use Whoops\Handler\PrettyPageHandler;
 
 /**
  * Class InAppInfoBoxHandler display error output directly into browser on the top of the screen - use in development only
+ *
  * @package WatchTower
  */
 class WhoopsMinibox extends Handler
 {
+    /**
+     * @var string
+     */
+    private $contentType = 'minibox';
 
     /**
      * @param EventInterface $event
@@ -24,92 +29,36 @@ class WhoopsMinibox extends Handler
         $ww = new WhoopsWrapper();
         $whoopsHandler = new PrettyPageHandler();
         $whoopsHandler->handleUnconditionally(true);
-        $box = $ww->handle($whoopsHandler,$event);
-        $html = $this->wrapIntoMinibox($box,$event);
-        $this->output = $html;
+        if ($this->contentType == 'minibox') {
+            $box = $this->createMinibox($event);
+        } else {
+            $box = $ww->handle($whoopsHandler, $event);
+        }
+        $this->output = $box;
         $plainTextHandler = new PlainTextHandler();
-        $this->outputVars['plaintext'] = $ww->handle($plainTextHandler,$event);
+        $this->outputVars['plaintext'] = $ww->handle($plainTextHandler, $event);
+        return $this;
+    }
 
+    /**
+     * @param string $contentType : "minibox" or "mainbox"
+     * @return $this
+     */
+    public function setContentType($contentType)
+    {
+        $this->contentType = $contentType;
         return $this;
     }
 
     /**
      * @return string $initialOutput
      */
-    protected function getOutputStart() {
-        $style = '<style>
-            .wt-minibox {
-                position: relative;
-                color: white;
-                box-sizing: border-box;
-                background-color: #2a2a2a;
-                padding: 5px;
-                max-height: 180px;
-                overflow: hidden;
-                transition: 0.5s;
-                font-size:10px;
-                border-bottom: 1px solid gray;
-            }
-            .wt-minibox .expand-error {
-                position:absolute;
-                bottom:5px;
-                right:5px;
-                cursor: pointer;
-                border: 0;
-                opacity: .8;
-                background: none;
-                color: rgba(255, 255, 255, 0.1);
-                box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.1);
-                border-radius: 3px;
-                outline: none !important;
-            }
-            .wt-minibox .expand-error:hover {
-                box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
-                color: rgba(255, 255, 255, 0.3);
-            }
-            .wt-minibox .exc-message {
-                font-size:13px;
-            }
-            .wt-minibox .frame-file {
-                font-size:12px;
-                padding-top: 3px;
-            }
-            .wt-mainbox.collapsed {
-                display: none;
-            }
-            .wt-mainbox.expanded {
-                display: block;
-            }
-          </style>';
-        $jquery = '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>';
-        $script = '<script>
-                   function toggleExpand() {
-                    $("button.expand-error").on("click",function() {
-                        
-                        if($(this).attr("action") === "expand") {
-                              var thisId = $(this).closest(".wt-minibox-wrapper").attr("id");
-                             $(".wt-minibox-wrapper").each(function(i,e) {
-                                   if($(e).attr("id") !== thisId) {
-                                       $(e).remove();
-                                   }
-                             });
-                             $(this).attr("action","collapse");
-                             $(this).html("COLLAPSE");
-                             $(this).closest(".wt-minibox-wrapper").find(".wt-mainbox").removeClass("collapsed");
-                             $("div#"+thisId+" .frame.active").trigger("click"); 
-                        }
-                        else {
-                             $(this).attr("action","expand");
-                             $(this).html("EXPAND");
-                             $(this).closest(".wt-minibox-wrapper").find(".wt-mainbox").removeClass("expanded").addClass("collapsed"); 
-                        }
-                    });
-                }
-                $("document").ready(function(){
-                      toggleExpand();
-                 });
-        </script>';
-        return $style.$jquery.$script;
+    protected function getOutputStart()
+    {
+        $style = '<style>' . file_get_contents(WATCHTOWER_RROOT . '/css/WhoopsMinibox.css') . '</style>';
+        $jquery = '<script>' . file_get_contents(WATCHTOWER_RROOT . '/js/jquery.min.js') . '</script>';
+        $script = '<script>' . file_get_contents(WATCHTOWER_RROOT . '/js/WhoopsMinibox.js') . '</script>';
+        return $style . $jquery . $script;
     }
 
     /**
@@ -117,16 +66,19 @@ class WhoopsMinibox extends Handler
      * @param EventInterface $event
      * @return string $html
      */
-    protected function wrapIntoMinibox($html,EventInterface $event) {
-
-        $id = 'e_'.str_replace('.','_',$event->getId());
-        $expButton = '<button action="expand" style="margin-left:5px;" class="rightButon expand-error" title="Hide error message">EXPAND</button>';
-        $minibox = '<div class="exc-message">
-                <span>'.$event->getName().': '.$event->getMessage().'</span>
-                <div class="frame-file"><strong><span class="delimiter">'.$event->getFile().':'.$event->getLine().'</span></strong></div>
-                </div>'.$expButton;
-        $html = '<div class="wt-minibox-wrapper" id="'.$id.'"><div class="wt-minibox">'.$minibox.'</div><div class="wt-mainbox collapsed">'.$html.'</div></div>';
-        $r = $html;
-        return $r;
+    protected function createMinibox(EventInterface $event)
+    {
+        $handlerClone = clone $this;
+        $handlerClone->setContentType('mainbox');
+        $sHandler = base64_encode(serialize($handlerClone));
+        $sEvent = base64_encode(serialize($event));
+        $readerPath = 'http://watchtower.local/getbox.php';
+        $template = file_get_contents(WATCHTOWER_RROOT . '/html/WhoopsMinibox.html');
+        $html = str_replace(
+            [':eventName', ':eventMessage', ':eventFile:', ':eventLine', ':eventId', ':readerPath', ':sEvent', ':sHandler'],
+            [$event->getName(), $event->getMessage(), $event->getFile(), $event->getLine(), $event->getId(), $readerPath, $sEvent, $sHandler], $template);
+        return $html;
     }
+
+
 }

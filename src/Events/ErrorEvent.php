@@ -1,6 +1,7 @@
 <?php
 namespace WatchTower\Events;
 
+use ErrorException;
 use Throwable;
 
 /**
@@ -21,7 +22,7 @@ class ErrorEvent extends Event
     public function __construct(array $errorInfo)
     {
         $this->id = uniqid('', true);
-        $this->errorInfo = $errorInfo;
+        $this->errorInfo = $this->filterInfo($errorInfo);
     }
 
     /**
@@ -45,7 +46,7 @@ class ErrorEvent extends Event
      */
     public function getException()
     {
-        return new \ErrorException($this->getMessage(), $this->getCode(),1,$this->getFile(),$this->getLine());
+        return new ErrorException($this->getMessage(), $this->getCode(),1,$this->getFile(),$this->getLine());
     }
 
     /**
@@ -125,6 +126,20 @@ class ErrorEvent extends Event
      */
     public function getLocationHash() {
         return $this->getCommonLocationHash('error',$this->errorInfo);
+    }
+
+    /**
+     * @param array $errorInfo
+     * @return array $filteredInfo
+     */
+    protected function filterInfo($errorInfo) {
+        if(isset($errorInfo['trace'])) {
+            $errorInfo['trace'] = array_map(function($val) {
+                $val['args'] = null;
+                return $val;
+            },$errorInfo['trace']);
+        }
+        return $errorInfo;
     }
 
 

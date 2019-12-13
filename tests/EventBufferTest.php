@@ -4,13 +4,16 @@ namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use ReflectionException;
 use WatchTower\EventBuffer;
 use WatchTower\Events\ErrorEvent;
+use WatchTower\Exceptions\WatchTowerException;
 
 class EventBufferTest extends TestCase
 {
     /**
      * @return EventBuffer
+     * @throws WatchTowerException
      */
     public function test__construct()
     {
@@ -22,7 +25,8 @@ class EventBufferTest extends TestCase
     /**
      * @depends test__construct
      * @param EventBuffer $eb
-     * @throws \ReflectionException
+     * @throws ReflectionException
+     * @throws WatchTowerException
      */
     public function testCanPush(EventBuffer $eb)
     {
@@ -38,10 +42,12 @@ class EventBufferTest extends TestCase
             'file' => 'C:\wamp64\www\personal\watchtower\tests\custom\functional_test.php',
             'line' => 55
         ];
+
         $canPush = $eb->canPush('error',$errorInfo);
         $this->assertTrue($canPush);
-        $buffer->setValue($eb, ['ec0bb1454c235969c3b2e2985a3e20da' => (new ErrorEvent($errorInfo))]);
+        $buffer->setValue($eb, ['61f4a112566e51959adc7fa392cd10f6' => (new ErrorEvent($errorInfo))]);
         $canPush = $eb->canPush('error',$errorInfo);
+
         $this->assertFalse($canPush);
         $errorInfo2 = [
             'code' => 512,
@@ -64,7 +70,7 @@ class EventBufferTest extends TestCase
     }
 
     /**
-     * @param EventBuffer $eb
+     * @throws WatchTowerException
      */
     public function testPush()
     {

@@ -3,6 +3,7 @@
 namespace WatchTower;
 
 use Exception;
+use Throwable;
 use WatchTower\Events\ErrorEvent;
 use WatchTower\Events\EventInterface;
 use WatchTower\Events\EventTrait;
@@ -109,6 +110,32 @@ class WatchTower
         return $this->enabled;
     }
 
+    /**
+     * @param array $request
+     * @return string $out
+     * @throws WatchTowerException
+     */
+    public function getBox($request) {
+        $out = '';
+        array_map(function($val) {return addslashes($val);},$request);
+        if($request['type'] == 'file') {
+            //todo - read global config here
+            $out = file_get_contents('exceptions/'.base64_decode($request['filename']));
+        }
+        elseif($request['type'] == 'generate') {
+            $event = @unserialize(@base64_decode($request['event']));
+            $handler = @unserialize(@base64_decode($request['handler']));
+            if($event instanceof EventInterface and $handler instanceof HandlerInterface) {
+                $out = $handler->handle($event)->getOutput();
+                //$out = $handler->handle($event)->sendToOutputTargets($event);
+            }
+            else {
+                throw new WatchTowerException('Wrong parameters provided.',25);
+            }
+        }
+        return $out;
+    }
+
 
     /**
      * @param string|int|array $eventType
@@ -131,6 +158,7 @@ class WatchTower
     /**
      * @param string $time
      * @return $this
+     * @throws WatchTowerException
      */
     public function reportOnceIn($time) {
         $this->getEventBuffer()->setReportSpan($time);
@@ -208,6 +236,7 @@ class WatchTower
      * @param Exception $exception
      * @return bool $result
      * @throws WatchTowerException
+     * @throws \ReflectionException
      */
     public function handleException(Exception $exception)
     {
@@ -338,7 +367,7 @@ class WatchTower
                     $this->getEventBuffer()->push($event);
                     $this->handleEvent($event);
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' .$e->getLine());
             }
 
@@ -358,7 +387,7 @@ class WatchTower
                     $this->getEventBuffer()->push($event);
                     $this->handleEvent($event);
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine());
             }
         });
