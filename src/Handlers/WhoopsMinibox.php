@@ -75,7 +75,7 @@ class WhoopsMinibox extends Handler
         $readerPath = 'http://watchtower.local/getbox.php';
         $template = file_get_contents(WATCHTOWER_RROOT . '/html/WhoopsMinibox.html');
         $html = str_replace(
-            [':eventName', ':eventMessage', ':eventFile:', ':eventLine', ':eventId', ':readerPath', ':sEvent', ':sHandler'],
+            [':eventName', ':eventMessage', ':eventFile', ':eventLine', ':eventId', ':readerPath', ':sEvent', ':sHandler'],
             [$event->getName(), $event->getMessage(), $event->getFile(), $event->getLine(), $event->getId(), $readerPath, $sEvent, $sHandler], $template);
         return $html;
     }

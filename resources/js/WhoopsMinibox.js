@@ -20,7 +20,7 @@ function iframeform($iframe) {
 }
 
 function toggleExpand() {
-    $("button.expand-error").on("click", function () {
+    $("button.wt-expand").on("click", function () {
         var $button = $(this);
         var $iframe = $(this).closest(".wt-minibox-wrapper").find(".wt-mainbox iframe");
         $iframe.attr("src", $iframe.data("src"));
