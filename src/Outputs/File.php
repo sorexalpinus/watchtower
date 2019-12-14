@@ -2,7 +2,6 @@
 
 namespace WatchTower\Outputs;
 
-use WatchTower\ConfigValidation;
 use WatchTower\Events\EventInterface;
 use WatchTower\Exceptions\WatchTowerException;
 
@@ -12,46 +11,34 @@ use WatchTower\Exceptions\WatchTowerException;
  */
 class File extends OutputTarget
 {
-    use ConfigValidation {
-        validateAndApplyConfig as parentValidateAndApplyConfig;
+
+    /**
+     * @return string $name
+     */
+    public function getName() {
+        return 'file';
     }
 
     /**
-     * @param string|null $item
-     * @return array $defaultConfig
+     * File constructor.
+     *
+     * @param array $config
+     * @throws WatchTowerException
      */
-    public function getDefaultConfig($item = null)
+    public function __construct($config = [])
     {
-        $webRoot = '';
-        if (PHP_SAPI !== 'cli') {
-            $webRoot = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'];
-        }
-
-        if (!isset($this->defaultConfig)) {
-            $accessLinkFunc = function (EventInterface $event, OutputTargetInterface $outputTarget) use ($webRoot) {
-                $filename = $outputTarget->getFilename($event->getId());
-                return $webRoot . 'tests/files/readReport.php?e=' . hash('sha256', 'some-salt' . $filename) . '&f=' . base64_encode($filename);
-            };
-            $this->defaultConfig = [
-                'dir' => ['mandatory' => true, 'value' => $_SERVER['DOCUMENT_ROOT'] . '/files/exceptions/'],
-                'ttl' => ['mandatory' => true, 'value' => '1 month'],
-                'accessLink' => ['mandatory' => false, 'value' => $accessLinkFunc]
-            ];
-        }
-        return $this->defaultConfig;
+        $mandatory = ['watchtower.reader','file.dir','file.ttl'];
+        $this->config = $this->validateConfig($config,$mandatory);
     }
 
-    public function execute(EventInterface $event, $content, $globalVars = [])
+    public function execute(EventInterface $event, $content, $outputStack = [])
     {
-        $dir = $this->prepareDir($this->config['dir']);
+        $dir = $this->prepareDir($this->config['file.dir']);
+        $this->removeOldFiles($dir, $this->config['file.ttl']);
         $fileName = $this->getFilename($event->getId());
+        //TODO: work with the result
         $result = file_put_contents($dir . $fileName, $content);
-        $this->removeOldFiles($dir, $this->config['ttl']);
-        $accessLink = is_callable($this->config['accessLink']) ? $this->config['accessLink']($event, $this) : $this->config['accessLink'];
-        $this->outputVars = [
-            'success' => (bool)$result,
-            'fileAccessLink' => $accessLink
-        ];
+        $this->output['accessLink'] = $this->config['watchtower.reader'].'?type=file&path='.base64_encode($dir . $fileName);
         return $this;
     }
 
@@ -61,7 +48,7 @@ class File extends OutputTarget
      */
     public function getFilename($eventId)
     {
-        return 'exception_' . date('Ymd_His') . '_' . $eventId . '.html';
+        return 'event_' . date('Ymd_His') . '_' . $eventId . '.html';
     }
 
     /**
@@ -111,20 +98,5 @@ class File extends OutputTarget
             }
         }
         return $dir;
-    }
-
-    /**
-     * @param $defaultConfig
-     * @param array $config
-     * @return array mixed
-     * @throws WatchTowerException
-     */
-    protected function validateAndApplyConfig($defaultConfig, $config)
-    {
-        $result = $this->parentValidateAndApplyConfig($defaultConfig, $config);
-        if (substr($result['dir'], -1) != '/') {
-            $result['dir'] .= '/';
-        }
-        return $result;
     }
 }

@@ -17,23 +17,23 @@ interface OutputTargetInterface
     static public function create($config = []);
 
     /**
+     * @return string $name
+     */
+    public function getName();
+
+    /**
      * @param EventInterface $event
-     * @param $content
-     * @param array $globalVars
+     * @param string $content
+     * @param array $outputStack
      * @return mixed
      */
-    public function execute(EventInterface $event,$content,$globalVars = []);
+    public function execute(EventInterface $event,$content,$outputStack);
 
     /**
-     * @param string|null $item
-     * @return array $defaultConfig
+     * @param string $item
+     * @return array $output
      */
-    public function getDefaultConfig($item = null);
-
-    /**
-     * @return array $outputVars
-     */
-    public function getOutputVars();
+    public function getOutput($item = '');
 
     /**
      * @param string $initialOutput

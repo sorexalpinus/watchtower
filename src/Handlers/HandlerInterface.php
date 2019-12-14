@@ -37,26 +37,10 @@ interface HandlerInterface
     public function sendTo(OutputTargetInterface $output);
 
     /**
+     * @param string $item
      * @return string $output
      */
-    public function getOutput();
-
-    /**
-     * @return array $ouputVars
-     */
-    public function getOutputVars();
-
-    /**
-     * @param string|null $item
-     * @return array|string $config
-     */
-    public function getConfig($item = null);
-
-    /**
-     * @param null $item
-     * @return mixed
-     */
-    public function getDefaultConfig($item = null);
+    public function getOutput($item = '');
 
 
     /**

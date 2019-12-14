@@ -10,13 +10,21 @@ use WatchTower\Events\EventInterface;
  */
 class Browser extends OutputTarget
 {
+
+    /**
+     * @return string $name
+     */
+    public function getName() {
+        return 'browser';
+    }
+
     /**
      * @param EventInterface $event
      * @param $content
-     * @param array $globalVars
-     * @return $this|void|OutputTargetInterface
+     * @param array $outputStack
+     * @return $this
      */
-    public function execute(EventInterface $event,$content,$globalVars = []) {
+    public function execute(EventInterface $event,$content,$outputStack = []) {
         echo $content;
         return $this;
     }

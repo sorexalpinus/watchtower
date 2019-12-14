@@ -3,6 +3,9 @@
 namespace WatchTower\Handlers;
 
 use WatchTower\Events\EventInterface;
+use WatchTower\Exceptions\WatchTowerException;
+use WatchTower\Outputs\OutputTargetInterface;
+use WatchTower\WatchTower;
 use WatchTower\Wrappers\WhoopsWrapper;
 use Whoops\Handler\PlainTextHandler;
 use Whoops\Handler\PrettyPageHandler;
@@ -16,37 +19,19 @@ use Whoops\Handler\PrettyPageHandler;
 class WhoopsMinibox extends Handler
 {
     /**
-     * @var string
-     */
-    private $contentType = 'minibox';
-
-    /**
      * @param EventInterface $event
      * @return $this
+     * @throws WatchTowerException
      */
     public function handle(EventInterface $event)
     {
         $ww = new WhoopsWrapper();
         $whoopsHandler = new PrettyPageHandler();
         $whoopsHandler->handleUnconditionally(true);
-        if ($this->contentType == 'minibox') {
-            $box = $this->createMinibox($event);
-        } else {
-            $box = $ww->handle($whoopsHandler, $event);
-        }
-        $this->output = $box;
+        $this->output['minibox'] = $this->createMinibox($event);
+        $this->output['main'] = $ww->handle($whoopsHandler, $event);
         $plainTextHandler = new PlainTextHandler();
-        $this->outputVars['plaintext'] = $ww->handle($plainTextHandler, $event);
-        return $this;
-    }
-
-    /**
-     * @param string $contentType : "minibox" or "mainbox"
-     * @return $this
-     */
-    public function setContentType($contentType)
-    {
-        $this->contentType = $contentType;
+        $this->output['plaintext'] = $ww->handle($plainTextHandler, $event);
         return $this;
     }
 
@@ -62,22 +47,43 @@ class WhoopsMinibox extends Handler
     }
 
     /**
-     * @param string $html
      * @param EventInterface $event
      * @return string $html
+     * @throws WatchTowerException
      */
     protected function createMinibox(EventInterface $event)
     {
         $handlerClone = clone $this;
-        $handlerClone->setContentType('mainbox');
         $sHandler = base64_encode(serialize($handlerClone));
         $sEvent = base64_encode(serialize($event));
-        $readerPath = 'http://watchtower.local/getbox.php';
+        $readerPath = WatchTower::getInstance()->getConfig('watchtower.reader');
         $template = file_get_contents(WATCHTOWER_RROOT . '/html/WhoopsMinibox.html');
         $html = str_replace(
             [':eventName', ':eventMessage', ':eventFile', ':eventLine', ':eventId', ':readerPath', ':sEvent', ':sHandler'],
             [$event->getName(), $event->getMessage(), $event->getFile(), $event->getLine(), $event->getId(), $readerPath, $sEvent, $sHandler], $template);
         return $html;
+    }
+
+    /**
+     * @param OutputTargetInterface $outputTarget
+     * @param EventInterface $event
+     * @param array $globalVars
+     */
+    protected function sendToTarget($outputTarget,$event,$globalVars) {
+
+        switch(get_class($outputTarget)) {
+            case 'WatchTower\Outputs\Browser': {
+                $output = $this->getOutput('minibox'); break;
+            }
+            case 'WatchTower\Outputs\File': {
+                $output = $this->getOutput('main'); break;
+            }
+            case 'WatchTower\Outputs\Email':
+            default: {
+                $output = $this->getOutput('plaintext'); break;
+            }
+        }
+        $outputTarget->execute($event, $output, $globalVars);
     }
 
 

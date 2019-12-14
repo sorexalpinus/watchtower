@@ -3,90 +3,92 @@
 namespace WatchTower\Outputs;
 
 use WatchTower\Events\EventInterface;
+use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Wrappers\MailTransportInterface;
 
 /**
  * Class Email
+ *
  * @package WatchTower\Outputs
  */
 class Email extends OutputTarget
 {
+
+    /**
+     * @return string $name
+     */
+    public function getName() {
+        return 'email';
+    }
+
+
+    /**
+     * File constructor.
+     *
+     * @param array $config
+     * @throws WatchTowerException
+     */
+    public function __construct($config = [])
+    {
+        $mandatory = ['email.transport','email.sender','email.subject','email.recipients'];
+        $this->config = $this->validateConfig($config,$mandatory);
+    }
+
     /**
      * @param EventInterface $event
      * @param $content
-     * @param array $globalVars
+     * @param array $outputStack
      * @return $this|void|OutputTargetInterface
      */
-    public function execute(EventInterface $event,$content,$globalVars = [])
+    public function execute(EventInterface $event, $content, $outputStack = [])
     {
-        $body = $this->buildEmailBody($content,$globalVars);
+        $body = $this->buildEmailBody($outputStack);
         /** @var MailTransportInterface $transport */
-        $transport = $this->config['transport'];
-        $transport->setSender($this->config['sender']);
+        $transport = $this->config['email.transport'];
+        $transport->setSender($this->config['email.sender']);
         $transport->setBody($body);
-        $subject = is_callable($this->config['subject']) ? $this->config['subject']($event,$this) : $this->config['subject'];
+        $subject = is_callable($this->config['email.subject']) ? $this->config['email.subject']($event, $this) : $this->config['email.subject'];
         $transport->setSubject($subject);
         $transport->isHtml(true);
-        if(is_array($this->config['recipients'])) {
-            foreach($this->config['recipients'] as $recipient) {
-                if(is_array($recipient)) {
-                    $transport->addRecipient($recipient[0],$recipient[1]);
-                }
-                else {
+        if (is_array($this->config['email.recipients'])) {
+            foreach ($this->config['email.recipients'] as $recipient) {
+                if (is_array($recipient)) {
+                    $transport->addRecipient($recipient[0], $recipient[1]);
+                } else {
                     $transport->addRecipient($recipient);
                 }
             }
         }
         $errorMsg = '';
+
         $success = $transport->send();
-        if(!$success) {
+        if (!$success) {
             $errorMsg = $transport->getErrorMessage();
         }
-        $this->outputVars = [
-            'success' => $success,
+        $this->output = [
+            'success' => (int)$success,
             'errorMsg' => $errorMsg
         ];
         return $this;
     }
 
     /**
-     * @param string $content
-     * @param array $globalVars
+     * TODO: this needs to be simplified
+     *
+     * @param $outputStack
      * @return string $body
      */
-    public function buildEmailBody($content,$globalVars) {
+    public function buildEmailBody($outputStack)
+    {
         $body = 'An error/exception occured<br />';
-        if(array_key_exists('plaintext',$globalVars) and strlen($globalVars['plaintext']) > 0) {
-            $body .= $globalVars['plaintext'] . '<br />';
+        if (array_key_exists('plaintext', $outputStack['handler']) and strlen($outputStack['handler']['plaintext']) > 0) {
+            $body .= '<br />'. $outputStack['handler']['plaintext'] . '<br />';
         }
-        if(array_key_exists('fileAccessLink',$globalVars) and strlen($globalVars['fileAccessLink']) > 0) {
+        if(array_key_exists('targets',$outputStack) and array_key_exists('file',$outputStack['targets']) and array_key_exists('accessLink',$outputStack['targets']['file'])) {
             $body .= "<br /><br />Find more information on the following link: <br /><br />";
-            $body .= "<a href='" . $globalVars['fileAccessLink'] . "'>Click here</a>";
-        }
-        else {
-            $body .= '<br /><br />';
-            $body .= $content;
+            $body .= "<a href='" . $outputStack['targets']['file']['accessLink'] . "'>Click here</a>";
         }
         return $body;
     }
 
-    /**
-     * @param string|null $item
-     * @return array $defaultConfig
-     */
-    public function getDefaultConfig($item = null)
-    {
-        $subjectFunc = function (EventInterface $event, OutputTargetInterface $outputTarget) {
-            return 'System '.$event->getType().' - ' . date("Y-m-d H:i:s");
-        };
-        if (!isset($this->defaultConfig)) {
-            $this->defaultConfig = [
-                'transport' => ['mandatory'=>true, 'value'=>null],
-                'sender'    => ['mandatory'=>true, 'value'=>null],
-                'recipients'=> ['mandatory'=>true, 'value'=>null],
-                'subject'   => ['mandatory'=>true, 'value'=>$subjectFunc]
-            ];
-        }
-        return $this->defaultConfig;
-    }
 }

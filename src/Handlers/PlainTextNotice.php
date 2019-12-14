@@ -2,7 +2,6 @@
 namespace WatchTower\Handlers;
 
 use WatchTower\Events\EventInterface;
-use WatchTower\Exceptions\WatchTowerException;
 
 /**
  * Class PlainTextNotice
@@ -10,16 +9,6 @@ use WatchTower\Exceptions\WatchTowerException;
  */
 class PlainTextNotice extends Handler
 {
-    /**
-     * PlainTextNotice constructor.
-     * @param array $config
-     * @throws WatchTowerException
-     */
-    public function __construct(array $config = [])
-    {
-        parent::__construct($config);
-    }
-
     /**
      * @param EventInterface $event
      * @return $this

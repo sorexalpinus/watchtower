@@ -43,17 +43,40 @@ class WatchTower
     /** @var EventBuffer $eventBuffer */
     private $eventBuffer;
 
+    /** @var array $config */
+    private $config;
 
+    /**
+     * WatchTower constructor.
+     *
+     * @param array $config
+     */
+    public function __construct($config)
+    {
+        $this->config = $config;
+    }
+
+    /**
+     * @param array $config
+     * @return WatchTower|static
+     */
+    static public function create($config) {
+        self::$instance = new static($config);
+        return self::$instance;
+    }
 
     /**
      * @return WatchTower $instance
+     * @throws WatchTowerException
      */
     static public function getInstance()
     {
-        if (!is_object(self::$instance)) {
-            self::$instance = new static();
+        if (is_object(self::$instance)) {
+            return self::$instance;
         }
-        return self::$instance;
+        else {
+            throw new WatchTowerException('WatchTower instance was not created yet. Use WatchTower::create().',27);
+        }
     }
 
     /**
@@ -119,15 +142,18 @@ class WatchTower
         $out = '';
         array_map(function($val) {return addslashes($val);},$request);
         if($request['type'] == 'file') {
-            //todo - read global config here
-            $out = file_get_contents('exceptions/'.base64_decode($request['filename']));
+            if(file_exists($request['path'])) {
+                echo file_get_contents(base64_decode($request['path']));
+            }
+            else {
+                throw new WatchTowerException(sprintf('Could not find file to read: %s',$request['path']),28);
+            }
         }
         elseif($request['type'] == 'generate') {
             $event = @unserialize(@base64_decode($request['event']));
             $handler = @unserialize(@base64_decode($request['handler']));
             if($event instanceof EventInterface and $handler instanceof HandlerInterface) {
                 $out = $handler->handle($event)->getOutput();
-                //$out = $handler->handle($event)->sendToOutputTargets($event);
             }
             else {
                 throw new WatchTowerException('Wrong parameters provided.',25);
@@ -279,6 +305,14 @@ class WatchTower
     public function reset() {
         $this->handlers = null;
         return $this;
+    }
+
+    /**
+     * @param string $item
+     * @return array|mixed
+     */
+    public function getConfig($item = '') {
+        return !empty($item) ? $this->config[$item] : $this->config;
     }
 
     /**
