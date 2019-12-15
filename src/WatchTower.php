@@ -309,10 +309,20 @@ class WatchTower
 
     /**
      * @param string $item
-     * @return array|mixed
+     * @return array|string|false
      */
     public function getConfig($item = '') {
-        return !empty($item) ? $this->config[$item] : $this->config;
+        if(!empty($item)) {
+            if(isset($this->config[$item])) {
+                return $this->config[$item];
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return $this->config;
+        }
     }
 
     /**

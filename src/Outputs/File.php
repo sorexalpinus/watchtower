@@ -36,9 +36,20 @@ class File extends OutputTarget
         $dir = $this->prepareDir($this->config['file.dir']);
         $this->removeOldFiles($dir, $this->config['file.ttl']);
         $fileName = $this->getFilename($event->getId());
-        //TODO: work with the result
         $result = file_put_contents($dir . $fileName, $content);
-        $this->output['accessLink'] = $this->config['watchtower.reader'].'?type=file&path='.base64_encode($dir . $fileName);
+        if(file_exists($dir . $fileName) and $result) {
+            $error = '';
+            $success = true;
+        }
+        else {
+            $success = false;
+            $error = 'Could not write error file';
+        }
+        $this->output = [
+            'success' => $success,
+            'errorMsg' => $error,
+            'accessLink' => $this->config['watchtower.reader'].'?type=file&path='.base64_encode($dir . $fileName)
+        ];
         return $this;
     }
 
@@ -96,6 +107,9 @@ class File extends OutputTarget
             if (!$result) {
                 throw new WatchTowerException('Not able to create exception file folder', 0004);
             }
+        }
+        if(substr($dir,-1) !== DIRECTORY_SEPARATOR) {
+            $dir .= DIRECTORY_SEPARATOR;
         }
         return $dir;
     }

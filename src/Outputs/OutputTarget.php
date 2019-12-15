@@ -75,7 +75,7 @@ abstract class OutputTarget implements OutputTargetInterface
             }
         }
         else {
-            return $out['main'];
+            return $out;
         }
     }
 

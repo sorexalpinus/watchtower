@@ -66,7 +66,7 @@ class Email extends OutputTarget
             $errorMsg = $transport->getErrorMessage();
         }
         $this->output = [
-            'success' => (int)$success,
+            'success' => $success,
             'errorMsg' => $errorMsg
         ];
         return $this;
@@ -83,6 +83,9 @@ class Email extends OutputTarget
         $body = 'An error/exception occured<br />';
         if (array_key_exists('plaintext', $outputStack['handler']) and strlen($outputStack['handler']['plaintext']) > 0) {
             $body .= '<br />'. $outputStack['handler']['plaintext'] . '<br />';
+        }
+        else {
+            $body .= '<br />'.$outputStack['handler']['main'] . '<br />';
         }
         if(array_key_exists('targets',$outputStack) and array_key_exists('file',$outputStack['targets']) and array_key_exists('accessLink',$outputStack['targets']['file'])) {
             $body .= "<br /><br />Find more information on the following link: <br /><br />";

@@ -3,6 +3,7 @@
 namespace WatchTower\Tests;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Handlers\PlainTextNotice;
 use WatchTower\Handlers\WhoopsMinibox;
@@ -11,6 +12,7 @@ use WatchTower\WatchTower;
 
 /**
  * Class WatchTowerTest
+ *
  * @covers \WatchTower\WatchTower
  * @package WatchTower
  */
@@ -19,21 +21,24 @@ class WatchTowerTest extends TestCase
 
     /**
      * @return WatchTower
+     * @throws WatchTowerException
      */
     public function testGetInstance()
     {
+        WatchTower::create([]);
         $wt = WatchTower::getInstance();
-        $this->assertInstanceOf(WatchTower::class,$wt);
+        $this->assertInstanceOf(WatchTower::class, $wt);
 
         return $wt;
     }
 
     /**
-     * @param WatchTower $wt
      * @throws WatchTowerException
      */
-    public function testEmptyConfig() {
+    public function testEmptyConfig()
+    {
         WatchTower::destroyInstance();
+        WatchTower::create([]);
         $wt = WatchTower::getInstance();
         $this->expectException(WatchTowerException::class);
         $wt->watch();
@@ -47,7 +52,7 @@ class WatchTowerTest extends TestCase
     public function testWatchFor(WatchTower $wt)
     {
         $wt = $wt->watchFor(E_WARNING);
-        $this->assertInstanceOf(WatchTower::class,$wt);
+        $this->assertInstanceOf(WatchTower::class, $wt);
         return $wt;
 
     }
@@ -61,7 +66,7 @@ class WatchTowerTest extends TestCase
     public function testThenCreate(WatchTower $wt)
     {
         $wt = $wt->thenCreate(WhoopsMinibox::create());
-        $this->assertInstanceOf(WatchTower::class,$wt);
+        $this->assertInstanceOf(WatchTower::class, $wt);
         return $wt;
     }
 
@@ -74,7 +79,7 @@ class WatchTowerTest extends TestCase
     public function testAndSendTo(WatchTower $wt)
     {
         $wt = $wt->andSendTo(Browser::create());
-        $this->assertInstanceOf(WatchTower::class,$wt);
+        $this->assertInstanceOf(WatchTower::class, $wt);
         return $wt;
 
     }
@@ -95,16 +100,17 @@ class WatchTowerTest extends TestCase
     }
 
     /**
-     *
      * @throws WatchTowerException
+     * @throws ReflectionException
      */
     public function testHandleException()
     {
         WatchTower::destroyInstance();
+        WatchTower::create([]);
         $wt = WatchTower::getInstance();
         $browser = $this->createMock(Browser::class);
         $browser->method('execute')
-            ->will($this->returnCallback(function() {
+            ->will($this->returnCallback(function () {
                 echo 'exception text';
             }));
         $wt
@@ -112,7 +118,7 @@ class WatchTowerTest extends TestCase
             ->thenCreate(PlainTextNotice::create())
             ->andSendTo($browser)
             ->watch();
-        $exception = new \ErrorException('exception',2,1);
+        $exception = new \ErrorException('exception', 2, 1);
         $this->expectOutputString('exception text');
         $result = $wt->handleException($exception);
         $this->assertTrue($result);
@@ -134,7 +140,6 @@ class WatchTowerTest extends TestCase
         $wt->enable();
         $this->assertTrue($wt->isEnabled());
     }
-
 
 
 }

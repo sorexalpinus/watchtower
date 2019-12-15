@@ -3,27 +3,61 @@
 namespace WatchTower\Tests;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 use WatchTower\Events\ExceptionEvent;
 use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Outputs\Email;
 use WatchTower\Outputs\OutputTargetInterface;
+use WatchTower\WatchTower;
 use WatchTower\Wrappers\PHPMailerMailTransport;
 
 class EmailTest extends TestCase
 {
 
-    protected function getMailConfig() {
+    public function setUp(): void
+    {
+        parent::setUp();
+        WatchTower::create([]);
+    }
+
+    public function getSampleOutputStack()
+    {
+        return [
+            'handler' => [
+                'main' => '',
+                'minibox' => '',
+                'plaintext' => '
+                     ErrorException: Undefined variable: a in file C:\a\b\c\include.php on line 8
+                     Stack trace:
+                      1. ErrorException->() C:\a\b\c\include.php:8
+                      2. WatchTower\WatchTower->WatchTower\{closure}() C:\a\b\c\include.php:8
+                      3. include_once()  C:\a\b\c\include\functional_test.php:10'
+            ],
+            'targets' => [
+                'browser' => '',
+                'file' => ['accessLink' => 'www.example.com/?file=abc']
+            ]
+        ];
+    }
+
+    /**
+     * @return array $confMail
+     */
+    protected function getMailConfig()
+    {
         $transport = $this->createMock(PHPMailerMailTransport::class);
         $transport
             ->method('send')->willReturn(true);
         $transport->method('getErrorMessage')->willReturn('nothing');
         $confMail = [
-            'transport'     => $transport,
-            'recipients'    => ['glisglis.14846463464894@somehost48.com'],
-            'sender'        => 'sender548648616@somehost48.com'
+            'email.transport' => $transport,
+            'email.recipients' => ['glisglis.14846463464894@somehost48.com'],
+            'email.sender' => 'sender548648616@somehost48.com',
+            'email.subject' => 'Watchtower: system error'
         ];
         return $confMail;
     }
+
     /**
      * @throws WatchTowerException
      */
@@ -32,7 +66,7 @@ class EmailTest extends TestCase
         $this->expectException(WatchTowerException::class);
         $this->expectExceptionMessage('The config variables');
         $this->expectExceptionMessage('are missing');
-        $o = new Email();
+        new Email();
     }
 
     /**
@@ -41,15 +75,17 @@ class EmailTest extends TestCase
     public function test__construct()
     {
         $o = new Email($this->getMailConfig());
-        $this->assertInstanceOf(Email::class,$o);
+        $this->assertInstanceOf(Email::class, $o);
     }
+
     /**
      * @return Email|OutputTargetInterface
+     * @throws WatchTowerException
      */
     public function testCreate()
     {
         $o = Email::create($this->getMailConfig());
-        $this->assertInstanceOf(Email::class,$o);
+        $this->assertInstanceOf(Email::class, $o);
         return $o;
     }
 
@@ -68,66 +104,32 @@ class EmailTest extends TestCase
      * @depends testCreate
      * @param Email $o
      */
-    public function testBuildEmailBody(Email $o) {
-        $body = $o->buildEmailBody('e-mail body content created by handler',[
-            'plaintext' => 'This will be displayed before the link to error/exception file',
-            'fileAccessLink' => 'www.example.com/exc=123'
-        ]);
-        $this->assertStringContainsString('This will be displayed before the link to error/exception file',$body);
-        $this->assertStringContainsString('<a href=\'www.example.com/exc=123\'',$body);
-        $body = $o->buildEmailBody('e-mail body content created by handler',[
-            'plaintext' => 'This will be displayed before the link to error/exception file',
-            'fileAccessLink' => ''
-        ]);
-        $this->assertStringContainsString('e-mail body content created by handler',$body);
-
+    public function testBuildEmailBody(Email $o)
+    {
+        $outputStack = $this->getSampleOutputStack();
+        $body = $o->buildEmailBody($outputStack);
+        $this->assertStringContainsString('ErrorException: Undefined variable', $body);
+        $this->assertStringContainsString('<a href=\'www.example.com/?file=abc\'', $body);
     }
 
     /**
      * @depends testCreate
      * @param Email $o
      * @return Email
+     * @throws ReflectionException
      * @throws WatchTowerException
      */
     public function testExecute(Email $o)
     {
-        $exception = new \ErrorException('Testing message',1,1);
+        $exception = new \ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
-        $o->execute($e,'Output this string in Email',['plaintext'=>'Output plaintext']);
-        $ov = $o->getOutputVars();
-        $this->assertIsArray($ov);
-        $this->assertArrayHasKey('success',$ov);
-        $this->assertArrayHasKey('errorMsg',$ov);
-        $this->assertTrue($ov['success']);
-        $this->assertEmpty($ov['errorMsg']);
+        $o->execute($e, 'Output this string in Email', $this->getSampleOutputStack());
+        $out = $o->getOutput();
+        $this->assertIsArray($out);
+        $this->assertArrayHasKey('success', $out);
+        $this->assertArrayHasKey('errorMsg', $out);
+        $this->assertTrue($out['success']);
+        $this->assertEmpty($out['errorMsg']);
         return $o;
-    }
-
-    /**
-     * @depends testCreate
-     * @param Email $o
-     */
-    public function testGetDefaultConfig(Email $o)
-    {
-        $dc = $o->getDefaultConfig();
-        $this->assertIsArray($dc);
-        $this->assertNotEmpty($dc);
-        $keys = ['transport','sender','recipients','subject'];
-        foreach($keys as $key) {
-            $this->assertArrayHasKey($key,$dc);
-        }
-        $this->assertIsArray($dc['recipients']);
-    }
-    /**
-     * @depends testExecute
-     * @param Email $o
-     */
-    public function testGetOutputVars(Email $o)
-    {
-        $ov = $o->getOutputVars();
-        $this->assertIsArray($ov);
-        $this->assertNotEmpty($ov);
-        $this->assertTrue($ov['success']);
-        $this->assertEmpty($ov['errorMsg']);
     }
 }

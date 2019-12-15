@@ -3,27 +3,31 @@
 namespace WatchTower\Tests;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 use WatchTower\Events\ExceptionEvent;
+use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Outputs\Browser;
+use WatchTower\Outputs\OutputTargetInterface;
 
 class BrowserTest extends TestCase
 {
     /**
-     * @throws \WatchTower\Exceptions\WatchTowerException
+     * @throws WatchTowerException
      */
     public function test__construct()
     {
         $o = new Browser();
-        $this->assertInstanceOf(Browser::class,$o);
+        $this->assertInstanceOf(Browser::class, $o);
     }
 
     /**
-     * @return Browser|\WatchTower\Outputs\OutputTargetInterface
+     * @return Browser|OutputTargetInterface
+     * @throws WatchTowerException
      */
     public function testCreate()
     {
         $o = Browser::create();
-        $this->assertInstanceOf(Browser::class,$o);
+        $this->assertInstanceOf(Browser::class, $o);
         return $o;
     }
 
@@ -41,34 +45,14 @@ class BrowserTest extends TestCase
     /**
      * @depends testCreate
      * @param Browser $o
-     * @throws \WatchTower\Exceptions\WatchTowerException
+     * @throws ReflectionException
      */
     public function testExecute(Browser $o)
     {
-        $exception = new \ErrorException('Testing message',1,1);
+        $exception = new \ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
         $this->expectOutputString('Output this string in browser');
-        $o->execute($e,'Output this string in browser');
+        $o->execute($e, 'Output this string in browser');
     }
 
-    /**
-     * @depends testCreate
-     * @param Browser $o
-     */
-    public function testGetDefaultConfig(Browser $o)
-    {
-        $dc = $o->getDefaultConfig();
-        $this->assertIsArray($dc);
-        $this->assertEmpty($dc);
-    }
-    /**
-     * @depends testCreate
-     * @param Browser $o
-     */
-    public function testGetOutputVars(Browser $o)
-    {
-        $ov = $o->getOutputVars();
-        $this->assertIsArray($ov);
-        $this->assertEmpty($ov);
-    }
 }
