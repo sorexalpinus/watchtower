@@ -37,6 +37,24 @@ abstract class OutputTarget implements OutputTargetInterface
     }
 
     /**
+     * @param string $item
+     * @return array|string|false
+     */
+    public function getConfig($item = '') {
+        if(!empty($item)) {
+            if(isset($this->config[$item])) {
+                return $this->config[$item];
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return $this->config;
+        }
+    }
+
+    /**
      * @return string $name
      */
     public function getName() {
@@ -94,15 +112,23 @@ abstract class OutputTarget implements OutputTargetInterface
      * @throws WatchTowerException
      */
     protected function validateConfig($config,$mandatory) {
+        $globalConfig = WatchTower::getInstance()->getConfig();
         $missing = [];
         foreach($mandatory as $name) {
-            $config[$name] = $config[$name] ?? WatchTower::getInstance()->getConfig($name);
+            $config[$name] = $config[$name] ?? $globalConfig[$name];
             if(empty($config[$name])) {
                 $missing[] = $name;
             }
         }
         if(sizeof($missing) > 0) {
             throw new WatchTowerException(sprintf('The config variables "%s" %s missing in %s',implode('","',$missing),count($missing) == 1 ? 'is':'are',get_class($this)),6);
+        }
+        if(is_array($globalConfig)) {
+            foreach($globalConfig as $name => $globalValue) {
+                if(!isset($config[$name])) {
+                    $config[$name] = $globalValue;
+                }
+            }
         }
         return $config;
     }

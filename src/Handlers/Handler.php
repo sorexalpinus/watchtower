@@ -69,6 +69,9 @@ abstract class Handler implements HandlerInterface
         return $this;
     }
 
+    /**
+     * @return OutputTargetInterface[]
+     */
     public function getOutputTargets()
     {
         return is_array($this->outputTargets) ? $this->outputTargets : [];
@@ -76,9 +79,10 @@ abstract class Handler implements HandlerInterface
 
     /**
      * @param EventInterface $event
+     * @param array $canSend
      * @return $this|HandlerInterface
      */
-    public function sendToOutputTargets(EventInterface $event)
+    public function sendToOutputTargets(EventInterface $event,$canSend = [])
     {
         if(!isset(self::$outputStarted)) {
             self::$outputStarted = [];
@@ -89,13 +93,15 @@ abstract class Handler implements HandlerInterface
                 'targets' => []
             ];
             /** @var OutputTargetInterface $outputTarget */
-            foreach ($this->outputTargets as $outputTarget) {
-                if(method_exists($this,'getOutputStart') and !$this->outputStarted($outputTarget)) {
-                    $outputTarget->init($this->getOutputStart());
-                    self::$outputStarted[get_class($outputTarget)] = true;
+            foreach ($this->outputTargets as $key => $outputTarget) {
+                if(isset($canSend[$key]) and $canSend[$key]) {
+                    if(method_exists($this,'getOutputStart') and !$this->outputStarted($outputTarget)) {
+                        $outputTarget->init($this->getOutputStart());
+                        self::$outputStarted[get_class($outputTarget)] = true;
+                    }
+                    $this->sendToTarget($outputTarget,$event,$outputStack);
+                    $outputStack['targets'][$outputTarget->getName()] = $outputTarget->getOutput('all');
                 }
-                $this->sendToTarget($outputTarget,$event,$outputStack);
-                $outputStack['targets'][$outputTarget->getName()] = $outputTarget->getOutput('all');
             }
             if(method_exists($this,'afterSendToOutput')) {
                 $this->afterSendToOutput();

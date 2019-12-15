@@ -37,6 +37,7 @@ class File extends OutputTarget
         $this->removeOldFiles($dir, $this->config['file.ttl']);
         $fileName = $this->getFilename($event->getId());
         $result = file_put_contents($dir . $fileName, $content);
+
         if(file_exists($dir . $fileName) and $result) {
             $error = '';
             $success = true;
@@ -76,7 +77,7 @@ class File extends OutputTarget
                 if (is_array($contents)) {
                     foreach ($contents as $archiveFile) {
                         if (substr($archiveFile, -5, 5) == '.html') {
-                            $fileDate = substr($archiveFile, 10, 15);
+                            $fileDate = substr($archiveFile, 6, 15);
                             $fileTs = strtotime(str_replace('_', '', $fileDate));
                             if ($fileTs <= $ttlTs) {
                                 $deleted = unlink($dir . $archiveFile);
@@ -101,7 +102,7 @@ class File extends OutputTarget
      */
     protected function prepareDir($dir)
     {
-        $dir = str_replace(["//", "\\\\"], [DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $dir);
+        $dir = str_replace(["/", "\\"], [DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $dir);
         if (!file_exists($dir) or !dir($dir)) {
             $result = mkdir($dir, 0755, true);
             if (!$result) {

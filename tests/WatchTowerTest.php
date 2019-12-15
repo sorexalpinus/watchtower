@@ -2,6 +2,7 @@
 
 namespace WatchTower\Tests;
 
+use ErrorException;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use WatchTower\Exceptions\WatchTowerException;
@@ -37,7 +38,7 @@ class WatchTowerTest extends TestCase
      */
     public function testEmptyConfig()
     {
-        WatchTower::destroyInstance();
+        WatchTower::destroy();
         WatchTower::create([]);
         $wt = WatchTower::getInstance();
         $this->expectException(WatchTowerException::class);
@@ -105,7 +106,7 @@ class WatchTowerTest extends TestCase
      */
     public function testHandleException()
     {
-        WatchTower::destroyInstance();
+        WatchTower::destroy();
         WatchTower::create([]);
         $wt = WatchTower::getInstance();
         $browser = $this->createMock(Browser::class);
@@ -114,11 +115,11 @@ class WatchTowerTest extends TestCase
                 echo 'exception text';
             }));
         $wt
-            ->watchFor(\ErrorException::class)
+            ->watchFor(ErrorException::class)
             ->thenCreate(PlainTextNotice::create())
             ->andSendTo($browser)
             ->watch();
-        $exception = new \ErrorException('exception', 2, 1);
+        $exception = new ErrorException('exception', 2, 1);
         $this->expectOutputString('exception text');
         $result = $wt->handleException($exception);
         $this->assertTrue($result);

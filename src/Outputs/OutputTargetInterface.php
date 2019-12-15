@@ -41,4 +41,10 @@ interface OutputTargetInterface
      */
     public function init($initialOutput);
 
+    /**
+     * @param string $item
+     * @return array|string|false
+     */
+    public function getConfig($item = '');
+
 }

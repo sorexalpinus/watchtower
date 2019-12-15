@@ -3,6 +3,7 @@
 namespace WatchTower;
 
 use Exception;
+use ReflectionException;
 use Throwable;
 use WatchTower\Events\ErrorEvent;
 use WatchTower\Events\EventInterface;
@@ -14,6 +15,7 @@ use WatchTower\Outputs\OutputTargetInterface;
 
 /**
  * Class WatchTower
+ *
  * @package WatchTower
  */
 class WatchTower
@@ -54,13 +56,15 @@ class WatchTower
     public function __construct($config)
     {
         $this->config = $config;
+
     }
 
     /**
      * @param array $config
      * @return WatchTower|static
      */
-    static public function create($config) {
+    static public function create($config)
+    {
         self::$instance = new static($config);
         return self::$instance;
     }
@@ -73,14 +77,14 @@ class WatchTower
     {
         if (is_object(self::$instance)) {
             return self::$instance;
-        }
-        else {
-            throw new WatchTowerException('WatchTower instance was not created yet. Use WatchTower::create().',27);
+        } else {
+            throw new WatchTowerException('WatchTower instance was not created yet. Use WatchTower::create().', 27);
         }
     }
 
     /**
      * @return WatchTower $WatchTower
+     * @throws WatchTowerException
      */
     public function enable()
     {
@@ -110,7 +114,7 @@ class WatchTower
     /**
      *
      */
-    static public function destroyInstance()
+    static public function destroy()
     {
         self::$instance = null;
     }
@@ -118,10 +122,11 @@ class WatchTower
     /**
      * For internal logging.
      */
-    static public function log($msg) {
+    static public function log($msg)
+    {
 
-        $f = @fopen(WATCHTOWER_FROOT.self::$logfile,'a+');
-        @fwrite($f,date('Y-m-d H:i:s').' '.$msg.PHP_EOL);
+        $f = @fopen(WATCHTOWER_FROOT . self::$logfile, 'a+');
+        @fwrite($f, date('Y-m-d H:i:s') . ' ' . $msg . PHP_EOL);
         @fclose($f);
     }
 
@@ -138,26 +143,26 @@ class WatchTower
      * @return string $out
      * @throws WatchTowerException
      */
-    public function getBox($request) {
+    public function getBox($request)
+    {
         $out = '';
-        array_map(function($val) {return addslashes($val);},$request);
-        if($request['type'] == 'file') {
+        array_map(function ($val) {
+            return addslashes($val);
+        }, $request);
+        if ($request['type'] == 'file') {
             $filepath = base64_decode($request['path']);
-            if(file_exists($filepath)) {
+            if (file_exists($filepath)) {
                 echo file_get_contents($filepath);
+            } else {
+                throw new WatchTowerException(sprintf('Could not find file to read: %s', $filepath), 28);
             }
-            else {
-                throw new WatchTowerException(sprintf('Could not find file to read: %s',$filepath),28);
-            }
-        }
-        elseif($request['type'] == 'generate') {
+        } elseif ($request['type'] == 'generate') {
             $event = @unserialize(@base64_decode($request['event']));
             $handler = @unserialize(@base64_decode($request['handler']));
-            if($event instanceof EventInterface and $handler instanceof HandlerInterface) {
+            if ($event instanceof EventInterface and $handler instanceof HandlerInterface) {
                 $out = $handler->handle($event)->getOutput();
-            }
-            else {
-                throw new WatchTowerException('Wrong parameters provided.',25);
+            } else {
+                throw new WatchTowerException('Wrong parameters provided.', 25);
             }
         }
         return $out;
@@ -169,28 +174,19 @@ class WatchTower
      * @param callable|null $filter
      * @return $this
      */
-    public function watchFor($eventType,$filter = null)
+    public function watchFor($eventType, $filter = null)
     {
         $this->setup = [];
         $eventTypes = is_array($eventType) ? $eventType : [$eventType];
-        if(!is_array($this->handlers)) {
+        if (!is_array($this->handlers)) {
             $this->handlers = [];
         }
-        foreach($eventTypes as $eventType) {
-            $this->setEventType($eventType,$filter);
+        foreach ($eventTypes as $eventType) {
+            $this->setEventType($eventType, $filter);
         }
         return $this;
     }
 
-    /**
-     * @param string $time
-     * @return $this
-     * @throws WatchTowerException
-     */
-    public function reportOnceIn($time) {
-        $this->getEventBuffer()->setReportSpan($time);
-        return $this;
-    }
 
     /**
      * @param $handler
@@ -200,7 +196,7 @@ class WatchTower
     public function thenCreate(HandlerInterface $handler)
     {
         if (is_array($this->setup)) {
-            foreach($this->setup as $eventType => $emptyArray) {
+            foreach ($this->setup as $eventType => $emptyArray) {
                 $hClone = clone $handler;
                 $h = &$this->handlers[$eventType];
                 if (!is_array($h)) {
@@ -225,7 +221,7 @@ class WatchTower
     {
         $outputTargets = is_array($outputTargets) ? $outputTargets : [$outputTargets];
         if (is_array($this->setup)) {
-            foreach($this->setup as $eventType => $handlerClass) {
+            foreach ($this->setup as $eventType => $handlerClass) {
                 /** @var HandlerInterface $handler */
                 $handler = $this->handlers[$eventType][$handlerClass];
                 if (is_object($handler)) {
@@ -263,7 +259,7 @@ class WatchTower
      * @param Exception $exception
      * @return bool $result
      * @throws WatchTowerException
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public function handleException(Exception $exception)
     {
@@ -282,16 +278,21 @@ class WatchTower
     /**
      * @param EventInterface $event
      * @return bool $result
+     * @throws WatchTowerException
      */
     public function handleEvent(EventInterface $event)
     {
-        /** @var HandlerInterface[] $handlers */
         $handlers = $this->getGetHandlersFor($event);
         if (is_array($handlers) and sizeof($handlers) > 0) {
+            /** @var HandlerInterface $handler */
             foreach ($handlers as $handler) {
-                $handler
-                    ->handle($event)
-                    ->sendToOutputTargets($event);
+                $handler->handle($event);
+                $targets = $handler->getOutputTargets();
+                $canReport = [];
+                foreach ($targets as $key => $target) {
+                    $canReport[$key] = $this->getEventBuffer()->canReport($event, $handler, $target);
+                }
+                $handler->sendToOutputTargets($event, $canReport);
             }
             $event->setHandled(true);
             return true;
@@ -303,7 +304,8 @@ class WatchTower
     /**
      * @return $this
      */
-    public function reset() {
+    public function reset()
+    {
         $this->handlers = null;
         return $this;
     }
@@ -312,16 +314,15 @@ class WatchTower
      * @param string $item
      * @return array|string|false
      */
-    public function getConfig($item = '') {
-        if(!empty($item)) {
-            if(isset($this->config[$item])) {
+    public function getConfig($item = '')
+    {
+        if (!empty($item)) {
+            if (isset($this->config[$item])) {
                 return $this->config[$item];
-            }
-            else {
+            } else {
                 return false;
             }
-        }
-        else {
+        } else {
             return $this->config;
         }
     }
@@ -331,10 +332,11 @@ class WatchTower
      * @param callable|null $filter
      * @return $this
      */
-    protected function setEventType($eventType,$filter = null) {
-        if (!array_key_exists($eventType,$this->handlers) or !is_array($this->handlers[$eventType])) {
+    protected function setEventType($eventType, $filter = null)
+    {
+        if (!array_key_exists($eventType, $this->handlers) or !is_array($this->handlers[$eventType])) {
             $this->handlers[$eventType] = [];
-            if(isset($filter)) {
+            if (isset($filter)) {
                 $this->filters[$eventType] = $filter;
             }
         }
@@ -345,6 +347,7 @@ class WatchTower
 
     /**
      * @return $this
+     * @throws WatchTowerException
      */
     protected function init()
     {
@@ -360,8 +363,10 @@ class WatchTower
      * @return EventBuffer $eventBuffer
      * @throws WatchTowerException
      */
-    protected function getEventBuffer() {
-        if(!isset($this->eventBuffer)) {;
+    protected function getEventBuffer()
+    {
+        if (!isset($this->eventBuffer)) {
+            ;
             $this->eventBuffer = EventBuffer::create();
         }
         return $this->eventBuffer;
@@ -393,7 +398,8 @@ class WatchTower
      * @param string|int $eventCategory
      * @return callable|false $filter
      */
-    protected function getFilterFor($eventCategory) {
+    protected function getFilterFor($eventCategory)
+    {
         return is_callable($this->filters[$eventCategory]) ? $this->filters[$eventCategory] : false;
     }
 
@@ -413,10 +419,10 @@ class WatchTower
                     $this->handleEvent($event);
                 }
             } catch (Throwable $e) {
-                self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' .$e->getLine());
+                self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine());
             }
 
-        },$scope);
+        }, $scope);
         return $this;
     }
 
@@ -443,10 +449,11 @@ class WatchTower
     /**
      * @return int $scope
      */
-    protected function getOverallErrScope() {
+    protected function getOverallErrScope()
+    {
         $scope = 0;
-        foreach(array_keys($this->handlers) as $eventType) {
-            if(is_numeric($eventType)) {
+        foreach (array_keys($this->handlers) as $eventType) {
+            if (is_numeric($eventType)) {
                 $scope |= $eventType;
             }
         }
@@ -456,11 +463,12 @@ class WatchTower
     /**
      * @return $this
      */
-    protected function setShutdown() {
+    protected function setShutdown()
+    {
         register_shutdown_function(function () {
             $this->getEventBuffer()->persist();
             $lastError = error_get_last();
-            if(!empty($lastError)) {
+            if (!empty($lastError)) {
                 $trace = debug_backtrace(false);
                 $lastError['trace'] = $trace;
                 $lastError['code'] = $lastError['type'];
@@ -475,24 +483,25 @@ class WatchTower
 
     /**
      * TODO:separate this into a utility class/trait
+     *
      * @param array $errorInfo
      * @return array $errorInfoModified
      */
-    protected function exceptionForbiddenConvert($errorInfo) {
-        if(strpos($errorInfo['message'],'must not throw an exception') !== false) {
+    protected function exceptionForbiddenConvert($errorInfo)
+    {
+        if (strpos($errorInfo['message'], 'must not throw an exception') !== false) {
             $msg = $errorInfo['message'];
             $matches = [];
-            preg_match('/in (.*?) on line \d+/',$msg,$matches);
-            if(is_array($matches) and sizeof($matches) > 0) {
+            preg_match('/in (.*?) on line \d+/', $msg, $matches);
+            if (is_array($matches) and sizeof($matches) > 0) {
                 $m = reset($matches);
-                $m = trim(str_replace(['on line ','in '],['',''],$m));
-                $fl = explode(' ',$m);
+                $m = trim(str_replace(['on line ', 'in '], ['', ''], $m));
+                $fl = explode(' ', $m);
                 $errorInfo['file'] = $fl[0];
                 $errorInfo['line'] = $fl[1];
             }
             return is_array($errorInfo) ? $errorInfo : [];
-        }
-        else {
+        } else {
             return $errorInfo;
 
         }

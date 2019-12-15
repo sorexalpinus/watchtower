@@ -25,10 +25,15 @@ interface HandlerInterface
 
     /**
      * @param EventInterface $event
+     * @param array $canSend
      * @return $this
      */
-    public function sendToOutputTargets(EventInterface $event);
+    public function sendToOutputTargets(EventInterface $event,$canSend = []);
 
+    /**
+     * @return OutputTargetInterface[] $outputTargets
+     */
+    public function getOutputTargets();
 
     /**
      * @param OutputTargetInterface $output
