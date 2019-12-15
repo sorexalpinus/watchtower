@@ -2,6 +2,7 @@
 
 namespace WatchTower\Tests;
 
+use ErrorException;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use WatchTower\Events\ExceptionEvent;
@@ -9,6 +10,7 @@ use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Handlers\HandlerInterface;
 use WatchTower\Handlers\PlainTextNotice;
 use WatchTower\Outputs\Browser;
+use WatchTower\WatchTower;
 
 /**
  * Class PlainTextNoticeTest
@@ -18,6 +20,12 @@ use WatchTower\Outputs\Browser;
  */
 class PlainTextNoticeTest extends TestCase
 {
+
+    public function setUp(): void
+    {
+        parent::setUp();
+        WatchTower::create([]);
+    }
     /**
      * @return PlainTextNotice
      */
@@ -65,7 +73,7 @@ class PlainTextNoticeTest extends TestCase
     public function testTestHandle(PlainTextNotice $h)
     {
         $regex = '/ErrorException: Testing message/';
-        $exception = new \ErrorException('Testing message', 1, 1);
+        $exception = new ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
         $h->handle($e);
         $o = $h->getOutput();
@@ -82,7 +90,7 @@ class PlainTextNoticeTest extends TestCase
     public function testSendToOutputTargets(PlainTextNotice $h)
     {
         $regex = '/ErrorException: Testing message/';
-        $exception = new \ErrorException('Testing message', 1, 1);
+        $exception = new ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
         $this->expectOutputRegex($regex);
         $h->sendToOutputTargets($e);

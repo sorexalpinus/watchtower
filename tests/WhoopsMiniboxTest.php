@@ -10,10 +10,15 @@ use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Handlers\HandlerInterface;
 use WatchTower\Handlers\WhoopsMinibox;
 use WatchTower\Outputs\Browser;
+use WatchTower\WatchTower;
 
 class WhoopsMiniboxTest extends TestCase
 {
-
+    public function setUp(): void
+    {
+        parent::setUp();
+        WatchTower::create([]);
+    }
     /**
      * @return WhoopsMinibox
      */

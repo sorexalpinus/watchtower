@@ -94,7 +94,7 @@ abstract class Handler implements HandlerInterface
             ];
             /** @var OutputTargetInterface $outputTarget */
             foreach ($this->outputTargets as $key => $outputTarget) {
-                if(isset($canSend[$key]) and $canSend[$key]) {
+                if(!isset($canSend[$key]) or (isset($canSend[$key]) and $canSend[$key])) {
                     if(method_exists($this,'getOutputStart') and !$this->outputStarted($outputTarget)) {
                         $outputTarget->init($this->getOutputStart());
                         self::$outputStarted[get_class($outputTarget)] = true;

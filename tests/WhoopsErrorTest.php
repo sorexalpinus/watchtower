@@ -2,12 +2,14 @@
 
 namespace Tests;
 
+use ErrorException;
 use PHPUnit\Framework\TestCase;
 use WatchTower\Events\ExceptionEvent;
 use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Handlers\HandlerInterface;
 use WatchTower\Handlers\WhoopsError;
 use WatchTower\Outputs\Browser;
+use WatchTower\WatchTower;
 
 /**
  * Class SomethingWentWrongTest
@@ -17,7 +19,11 @@ use WatchTower\Outputs\Browser;
  */
 class WhoopsErrorTest extends TestCase
 {
-
+    public function setUp(): void
+    {
+        parent::setUp();
+        WatchTower::create([]);
+    }
     /**
      * @return WhoopsError
      * @throws WatchTowerException
@@ -68,7 +74,7 @@ class WhoopsErrorTest extends TestCase
     {
         $regex = '/Testing message/';
         $regex2 = '/Environment &amp; details:/';
-        $exception = new \ErrorException('Testing message', 1, 1);
+        $exception = new ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
         $h->handle($e);
         $o = $h->getOutput();
@@ -89,7 +95,7 @@ class WhoopsErrorTest extends TestCase
     {
         $regex = '/Testing message/';
         $regex2 = '/Environment &amp; details:/';
-        $exception = new \ErrorException('Testing message', 1, 1);
+        $exception = new ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
         $this->expectOutputRegex($regex);
         $this->expectOutputRegex($regex2);

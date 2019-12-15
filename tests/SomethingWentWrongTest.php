@@ -2,6 +2,7 @@
 
 namespace WatchTower\Tests;
 
+use ErrorException;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use WatchTower\Events\ExceptionEvent;
@@ -9,6 +10,7 @@ use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Handlers\HandlerInterface;
 use WatchTower\Handlers\SomethingWentWrong;
 use WatchTower\Outputs\Browser;
+use WatchTower\WatchTower;
 
 /**
  * Class SomethingWentWrongTest
@@ -19,6 +21,11 @@ use WatchTower\Outputs\Browser;
 class SomethingWentWrongTest extends TestCase
 {
 
+    public function setUp(): void
+    {
+        parent::setUp();
+        WatchTower::create([]);
+    }
     /**
      * @return SomethingWentWrong
      */
@@ -66,7 +73,7 @@ class SomethingWentWrongTest extends TestCase
     public function testTestHandle(SomethingWentWrong $h)
     {
         $regex = '/We\'re sorry, but something went wrong/';
-        $exception = new \ErrorException('Testing message', 1, 1);
+        $exception = new ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
         $h->handle($e);
         $o = $h->getOutput();
@@ -84,7 +91,7 @@ class SomethingWentWrongTest extends TestCase
     public function testSendToOutputTargets(SomethingWentWrong $h)
     {
         $regex = '/We\'re sorry, but something went wrong/';
-        $exception = new \ErrorException('Testing message', 1, 1);
+        $exception = new ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
         $this->expectOutputRegex($regex);
         $h->sendToOutputTargets($e);

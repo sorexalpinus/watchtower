@@ -2,15 +2,24 @@
 
 namespace WatchTower\Tests;
 
+use ErrorException;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use WatchTower\Events\ExceptionEvent;
 use WatchTower\Exceptions\WatchTowerException;
 use WatchTower\Outputs\Browser;
 use WatchTower\Outputs\OutputTargetInterface;
+use WatchTower\WatchTower;
 
 class BrowserTest extends TestCase
 {
+
+    public function setUp(): void
+    {
+        parent::setUp();
+        WatchTower::create([]);
+    }
+
     /**
      * @throws WatchTowerException
      */
@@ -49,7 +58,7 @@ class BrowserTest extends TestCase
      */
     public function testExecute(Browser $o)
     {
-        $exception = new \ErrorException('Testing message', 1, 1);
+        $exception = new ErrorException('Testing message', 1, 1);
         $e = new ExceptionEvent($exception);
         $this->expectOutputString('Output this string in browser');
         $o->execute($e, 'Output this string in browser');

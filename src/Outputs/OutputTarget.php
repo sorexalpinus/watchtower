@@ -115,7 +115,8 @@ abstract class OutputTarget implements OutputTargetInterface
         $globalConfig = WatchTower::getInstance()->getConfig();
         $missing = [];
         foreach($mandatory as $name) {
-            $config[$name] = $config[$name] ?? $globalConfig[$name];
+            $global = array_key_exists($name,$globalConfig) ? $globalConfig[$name] : null;
+            $config[$name] = $config[$name] ?? $global;
             if(empty($config[$name])) {
                 $missing[] = $name;
             }
