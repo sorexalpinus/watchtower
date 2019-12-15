@@ -142,11 +142,12 @@ class WatchTower
         $out = '';
         array_map(function($val) {return addslashes($val);},$request);
         if($request['type'] == 'file') {
-            if(file_exists($request['path'])) {
-                echo file_get_contents(base64_decode($request['path']));
+            $filepath = base64_decode($request['path']);
+            if(file_exists($filepath)) {
+                echo file_get_contents($filepath);
             }
             else {
-                throw new WatchTowerException(sprintf('Could not find file to read: %s',$request['path']),28);
+                throw new WatchTowerException(sprintf('Could not find file to read: %s',$filepath),28);
             }
         }
         elseif($request['type'] == 'generate') {
