@@ -17,9 +17,4 @@ interface WatchTowerAwareException
      * @return array $extraInfo
      */
     public function getExtraInfo();
-
-    /**
-     * @return $this
-     */
-    public function handle();
 }

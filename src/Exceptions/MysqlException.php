@@ -4,6 +4,7 @@ namespace WatchTower\Exceptions;
 
 use ErrorException;
 use mysqli;
+use ReflectionException;
 use WatchTower\WatchTower;
 
 /**
@@ -33,11 +34,9 @@ class MysqlException extends ErrorException implements WatchTowerAwareException
     /** @var array $mysqlErrorInfo */
     protected $mysqlErrorInfo;
 
-    /** @var WatchTower $WatchTower */
-    protected $WatchTower;
-
     /**
      * MysqlException constructor.
+     *
      * @param mysqli $mysqli
      * @param string $query
      * @param string $message
@@ -61,17 +60,18 @@ class MysqlException extends ErrorException implements WatchTowerAwareException
             'message' => $mysqli->error,
             'query' => $query
         ];
-        $this->WatchTower = WatchTower::getInstance();
     }
 
     /**
      * @return MysqlException|false
      * @throws WatchTowerException
+     * @throws ReflectionException
      */
     public function handle()
     {
-        if (is_object($this->WatchTower)) {
-            $this->WatchTower->handleException($this);
+        $wt = WatchTower::getInstance();
+        if ($wt) {
+            $wt->handleException($this);
             return $this;
         } else {
             return false;
