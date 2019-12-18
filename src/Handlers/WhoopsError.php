@@ -23,9 +23,9 @@ class WhoopsError extends Handler
         $ww = new WhoopsWrapper();
         $whoopsHandler =new PrettyPageHandler();
         $whoopsHandler->handleUnconditionally(true);
-        $this->output = $ww->handle($whoopsHandler,$event);
+        $this->output['main'] = $ww->handle($whoopsHandler,$event);
         $plainTextHandler = new PlainTextHandler();
-        $this->outputVars['plaintext'] = $ww->handle($plainTextHandler,$event);
+        $this->output['plaintext'] = $ww->handle($plainTextHandler,$event);
         return $this;
     }
 

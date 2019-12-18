@@ -18,9 +18,6 @@ abstract class Handler implements HandlerInterface
     /** @var array $output */
     protected $output;
 
-    /** @var array $outputVars */
-    protected $outputVars;
-
     /** @var OutputTargetInterface[] */
     protected $outputTargets;
 
