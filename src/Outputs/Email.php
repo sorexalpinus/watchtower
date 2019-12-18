@@ -81,16 +81,19 @@ class Email extends OutputTarget
     public function buildEmailBody($outputStack)
     {
         $body = 'An error/exception occured<br />';
-        if (array_key_exists('plaintext', $outputStack['handler']) and strlen($outputStack['handler']['plaintext']) > 0) {
-            $body .= '<br />'. $outputStack['handler']['plaintext'] . '<br />';
+        if(is_array($outputStack)) {
+            if (array_key_exists('handler',$outputStack) and array_key_exists('plaintext', $outputStack['handler']) and strlen($outputStack['handler']['plaintext']) > 0) {
+                $body .= '<br />'. $outputStack['handler']['plaintext'] . '<br />';
+            }
+            else {
+                $body .= '<br />'.$outputStack['handler']['main'] . '<br />';
+            }
+            if(array_key_exists('targets',$outputStack) and array_key_exists('file',$outputStack['targets']) and array_key_exists('accessLink',$outputStack['targets']['file'])) {
+                $body .= "<br /><br />Find more information on the following link: <br /><br />";
+                $body .= "<a href='" . $outputStack['targets']['file']['accessLink'] . "'>Click here</a>";
+            }
         }
-        else {
-            $body .= '<br />'.$outputStack['handler']['main'] . '<br />';
-        }
-        if(array_key_exists('targets',$outputStack) and array_key_exists('file',$outputStack['targets']) and array_key_exists('accessLink',$outputStack['targets']['file'])) {
-            $body .= "<br /><br />Find more information on the following link: <br /><br />";
-            $body .= "<a href='" . $outputStack['targets']['file']['accessLink'] . "'>Click here</a>";
-        }
+
         return $body;
     }
 
