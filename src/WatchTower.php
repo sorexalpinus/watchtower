@@ -466,16 +466,20 @@ class WatchTower
     protected function setShutdown()
     {
         register_shutdown_function(function () {
-            $this->getEventBuffer()->persist();
-            $lastError = error_get_last();
-            if (!empty($lastError)) {
-                $trace = debug_backtrace(false);
-                $lastError['trace'] = $trace;
-                $lastError['code'] = $lastError['type'];
-                unset($lastError['type']);
-                $lastError = $this->exceptionForbiddenConvert($lastError);
-                $event = new ErrorEvent($lastError);
-                $this->handleEvent($event);
+            try {
+                $this->getEventBuffer()->persist();
+                $lastError = error_get_last();
+                if (!empty($lastError)) {
+                    $trace = debug_backtrace(false);
+                    $lastError['trace'] = $trace;
+                    $lastError['code'] = $lastError['type'];
+                    unset($lastError['type']);
+                    $lastError = $this->exceptionForbiddenConvert($lastError);
+                    $event = new ErrorEvent($lastError);
+                    $this->handleEvent($event);
+                }
+            } catch (Throwable $e) {
+                self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine());
             }
         });
         return $this;
