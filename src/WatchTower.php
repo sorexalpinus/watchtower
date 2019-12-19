@@ -2,7 +2,6 @@
 
 namespace WatchTower;
 
-use Exception;
 use ReflectionException;
 use Throwable;
 use WatchTower\Events\ErrorEvent;
@@ -256,12 +255,12 @@ class WatchTower
 
 
     /**
-     * @param Exception $exception
+     * @param Throwable $exception
      * @return bool $result
-     * @throws WatchTowerException
      * @throws ReflectionException
+     * @throws WatchTowerException
      */
-    public function handleException(Exception $exception)
+    public function handleException(Throwable $exception)
     {
         $result = false;
         if ($this->isEnabled()) {
