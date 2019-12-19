@@ -4,6 +4,7 @@ namespace WatchTower\Events;
 use ReflectionClass;
 use ReflectionException;
 use Throwable;
+use WatchTower\Exceptions\WatchTowerException;
 
 /**
  * Class ExceptionEvent
@@ -20,11 +21,11 @@ class ExceptionEvent extends Event
      *
      * @param Throwable $exception
      * @throws ReflectionException
+     * @throws WatchTowerException
      */
     public function __construct(Throwable $exception)
     {
         $this->id = uniqid('', true);
-//        $this->flattenExceptionBacktrace($exception);
         $this->filterTrace($exception);
         $this->exception = $exception;
     }
@@ -115,20 +116,27 @@ class ExceptionEvent extends Event
     }
 
     /**
-     * @param Throwable $exception
+     * @param Throwable $throwable
      * @return $this
      * @throws ReflectionException
+     * @throws WatchTowerException
      */
-    protected function filterTrace(Throwable $exception) {
-        if(is_array($exception->getTrace())) {
-            $traceProperty = (new ReflectionClass('Exception'))->getProperty('trace');
-            $traceProperty->setAccessible(true);
-            $trace = array_map(function($val) {
-                $val['args'] = [];
-                return $val;
-            },$exception->getTrace());
-            $traceProperty->setValue($exception, $trace);
-            $traceProperty->setAccessible(false);
+    protected function filterTrace(Throwable $throwable) {
+        if(is_array($throwable->getTrace())) {
+            $reflection = (new ReflectionClass(get_class($throwable)));
+            if($reflection->hasProperty('trace')) {
+                $traceProperty = $reflection->getProperty('trace');
+                $traceProperty->setAccessible(true);
+                $trace = array_map(function($val) {
+                    $val['args'] = [];
+                    return $val;
+                },$throwable->getTrace());
+                $traceProperty->setValue($throwable, $trace);
+                $traceProperty->setAccessible(false);
+            }
+            else {
+                throw new WatchTowerException(sprintf('Class %s has not property trace',get_class($throwable)),29);
+            }
         }
         return $this;
     }
