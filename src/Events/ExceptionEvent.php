@@ -5,6 +5,7 @@ use ReflectionClass;
 use ReflectionException;
 use Throwable;
 use WatchTower\Exceptions\WatchTowerException;
+use WatchTower\WatchTower;
 
 /**
  * Class ExceptionEvent
@@ -135,7 +136,8 @@ class ExceptionEvent extends Event
                 $traceProperty->setAccessible(false);
             }
             else {
-                throw new WatchTowerException(sprintf('Class %s has not property trace',get_class($throwable)),29);
+                WatchTower::log(sprintf('Class %s has not property trace',get_class($throwable)));
+                //throw new WatchTowerException(sprintf('Class %s has not property trace',get_class($throwable)),29);
             }
         }
         return $this;
