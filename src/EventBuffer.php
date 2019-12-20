@@ -33,10 +33,10 @@ class EventBuffer implements Countable
     protected $timelog;
 
     /** @var int $maxHistorySize */
-    protected $maxTimelogSize = 20;
+    protected $maxTimelogSize = 2000;
 
     /** @var int $maxBufferSize */
-    protected $maxBufferSize = 50;
+    protected $maxBufferSize = 100;
 
     /**
      * @return EventBuffer $eventsBuffer
@@ -137,8 +137,9 @@ class EventBuffer implements Countable
             }
             $fSize = count($file);
             if ($fSize > $this->maxTimelogSize) {
-                $cut = $fSize - $this->maxTimelogSize;
-                $file = array_slice($file, $cut - 1, $fSize - 1);
+                //remove one fifth from the start
+                $cut = (int)round($fSize / 5);
+                $file = array_slice($file, $cut - 1, $fSize);
             }
             file_put_contents($this->getFullTimeLogPath(), implode(PHP_EOL, $file));
         }
