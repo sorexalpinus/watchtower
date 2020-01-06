@@ -53,14 +53,22 @@ class WhoopsMinibox extends Handler
      */
     protected function createMinibox(EventInterface $event)
     {
-        $handlerClone = clone $this;
-        $sHandler = base64_encode(serialize($handlerClone));
-        $sEvent = base64_encode(serialize($event));
-        $readerPath = WatchTower::getInstance()->getConfig('watchtower.reader');
-        $template = file_get_contents(WATCHTOWER_RROOT . '/html/WhoopsMinibox.html');
-        $html = str_replace(
-            [':eventName', ':eventMessage', ':eventFile', ':eventLine', ':eventId', ':readerPath', ':sEvent', ':sHandler'],
-            [$event->getName(), $event->getMessage(), $event->getFile(), $event->getLine(), $event->getId(), $readerPath, $sEvent, $sHandler], $template);
+        try {
+            $handlerClone = clone $this;
+            $sHandler = base64_encode(serialize($handlerClone));
+            $sEvent = base64_encode(serialize($event));
+        }
+        catch (\Throwable $e) {
+            $sHandler = $sEvent = '';
+            WatchTower::log($e);
+        }
+        finally {
+            $readerPath = WatchTower::getInstance()->getConfig('watchtower.reader');
+            $template = file_get_contents(WATCHTOWER_RROOT . '/html/WhoopsMinibox.html');
+            $html = str_replace(
+                [':eventName', ':eventMessage', ':eventFile', ':eventLine', ':eventId', ':readerPath', ':sEvent', ':sHandler'],
+                [$event->getName(), $event->getMessage(), $event->getFile(), $event->getLine(), $event->getId(), $readerPath, $sEvent, $sHandler], $template);
+        }
         return $html;
     }
 

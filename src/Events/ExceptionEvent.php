@@ -120,25 +120,37 @@ class ExceptionEvent extends Event
      * @param Throwable $throwable
      * @return $this
      * @throws ReflectionException
-     * @throws WatchTowerException
      */
     protected function filterTrace(Throwable $throwable) {
-        if(is_array($throwable->getTrace())) {
-            $reflection = (new ReflectionClass(get_class($throwable)));
+        try {
+            if($throwable instanceof \Exception) {
+                $reflect = 'Exception';
+            }
+            elseif($throwable instanceof \Error) {
+                $reflect = 'Error';
+            }
+            else {
+                throw new WatchTowerException('Unknown throwable instance');
+            }
+            $reflection = (new ReflectionClass($reflect));
             if($reflection->hasProperty('trace')) {
                 $traceProperty = $reflection->getProperty('trace');
                 $traceProperty->setAccessible(true);
-                $trace = array_map(function($val) {
-                    $val['args'] = [];
-                    return $val;
-                },$throwable->getTrace());
-                $traceProperty->setValue($throwable, $trace);
+                if(is_array($throwable->getTrace())) {
+                    $trace = array_map(function ($val) {
+                        $val['args'] = [];
+                        return $val;
+                    }, $throwable->getTrace());
+                    $traceProperty->setValue($throwable, $trace);
+                }
                 $traceProperty->setAccessible(false);
             }
             else {
-                WatchTower::log(sprintf('Class %s has not property trace',get_class($throwable)));
-                //throw new WatchTowerException(sprintf('Class %s has not property trace',get_class($throwable)),29);
+                throw new WatchTowerException('Throwable has not "trace" property');
             }
+        }
+        catch (WatchTowerException $e) {
+            WatchTower::log($e->getMessage());
         }
         return $this;
     }
