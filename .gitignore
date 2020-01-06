@@ -27,5 +27,6 @@
 /assets/
 /tests/files/
 /tests/custom/
+/tests/config/
 /files/
 .idea
