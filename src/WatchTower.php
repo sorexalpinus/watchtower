@@ -399,7 +399,7 @@ class WatchTower
      */
     protected function getFilterFor($eventCategory)
     {
-        return is_callable($this->filters[$eventCategory]) ? $this->filters[$eventCategory] : false;
+        return (array_key_exists($eventCategory,$this->filters) and is_callable($this->filters[$eventCategory])) ? $this->filters[$eventCategory] : false;
     }
 
     /**
