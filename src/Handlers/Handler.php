@@ -48,14 +48,15 @@ abstract class Handler implements HandlerInterface
      */
     public function __sleep()
     {
-        //TODO: temporary solution
+        $unset = ['outputTargets','output'];
         $props = get_object_vars($this);
-        if(is_array($props) and array_key_exists('outputTargets',$props)) {
-            unset($props['outputTargets']);
+        foreach($unset as $unsetProp) {
+            if(array_key_exists($unsetProp,$props)) {
+                unset($props[$unsetProp]);
+            }
         }
         return array_keys($props);
     }
-
     /**
      * @param OutputTargetInterface $output
      * @return $this
