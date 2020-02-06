@@ -410,12 +410,14 @@ class WatchTower
         $scope = $this->getOverallErrScope();
         set_error_handler(function ($code, $message, $file, $line) {
             try {
-                $errorInfo = compact('code', 'message', 'file', 'line');
-                if ($this->getEventBuffer()->canPush('error', $errorInfo)) {
-                    $errorInfo['trace'] = debug_backtrace(false);
-                    $event = new ErrorEvent($errorInfo);
-                    $this->getEventBuffer()->push($event);
-                    $this->handleEvent($event);
+                if($this->isEnabled()) {
+                    $errorInfo = compact('code', 'message', 'file', 'line');
+                    if ($this->getEventBuffer()->canPush('error', $errorInfo)) {
+                        $errorInfo['trace'] = debug_backtrace(false);
+                        $event = new ErrorEvent($errorInfo);
+                        $this->getEventBuffer()->push($event);
+                        $this->handleEvent($event);
+                    }
                 }
             } catch (Throwable $e) {
                 self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine());
@@ -432,10 +434,12 @@ class WatchTower
     {
         set_exception_handler(function ($exception) {
             try {
-                if ($this->getEventBuffer()->canPush('exception', $exception)) {
-                    $event = new ExceptionEvent($exception);
-                    $this->getEventBuffer()->push($event);
-                    $this->handleEvent($event);
+                if($this->isEnabled()) {
+                    if ($this->getEventBuffer()->canPush('exception', $exception)) {
+                        $event = new ExceptionEvent($exception);
+                        $this->getEventBuffer()->push($event);
+                        $this->handleEvent($event);
+                    }
                 }
             } catch (Throwable $e) {
                 self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine());
@@ -466,16 +470,18 @@ class WatchTower
     {
         register_shutdown_function(function () {
             try {
-                $this->getEventBuffer()->persist();
-                $lastError = error_get_last();
-                if (!empty($lastError)) {
-                    $trace = debug_backtrace(false);
-                    $lastError['trace'] = $trace;
-                    $lastError['code'] = $lastError['type'];
-                    unset($lastError['type']);
-                    $lastError = $this->exceptionForbiddenConvert($lastError);
-                    $event = new ErrorEvent($lastError);
-                    $this->handleEvent($event);
+                if($this->isEnabled()) {
+                    $this->getEventBuffer()->persist();
+                    $lastError = error_get_last();
+                    if (!empty($lastError)) {
+                        $trace = debug_backtrace(false);
+                        $lastError['trace'] = $trace;
+                        $lastError['code'] = $lastError['type'];
+                        unset($lastError['type']);
+                        $lastError = $this->exceptionForbiddenConvert($lastError);
+                        $event = new ErrorEvent($lastError);
+                        $this->handleEvent($event);
+                    }
                 }
             } catch (Throwable $e) {
                 self::log(get_class($e) . '; ' . $e->getMessage() . ' ' . $e->getFile() . ':' . $e->getLine());
